@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Open with: https://github.com/wanglin2/mind-map
+*.smm linguist-language=JSON
