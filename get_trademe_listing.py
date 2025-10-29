@@ -40,11 +40,26 @@ with engine.begin() as c:
     task_id = result.fetchone()[0]
 
 # %%
-page = 1
+try:
+    response = session.get(
+        "https://www.trademe.co.nz/a/property/residential/sale/auckland",
+        headers=header,
+    )
+    response.raise_for_status()
+    tree = BeautifulSoup(response.text, "html.parser")
+    entities = tree.find('script', {'id': 'frend-state'}).text
+    entities = json.loads(entities)
+    meta_parent = entities["NGRX_STATE"]['search']['entities']
+    token = list(meta_parent.keys())[0]
+    meta = meta_parent[token]['item']
+    n_pages = int(meta['totalCount'] / meta['pageSize']) + 1  # equivalent to "ceil"
+except Exception as e:
+    logging.error(f"[Meta data] {type(e).__name__}: {e}")
+    exit(1)
+
 max_failed_pages = 5
 failed_pages = 0
-pbar = tqdm(total=None, desc="Fetch properties")
-while True:
+for page in tqdm(range(1, n_pages + 1), desc="Read properties"):
     try:
         response = session.get(
             "https://www.trademe.co.nz/a/property/residential/sale/auckland",
@@ -60,29 +75,25 @@ while True:
         entities = json.loads(entities)
         entities = entities["NGRX_STATE"]["listing"]["cachedSearchResults"]["entities"]
     except Exception as e:
-        logging.warning(f"[Page {page}] {type(e).__name__}: {e}")
         failed_pages += 1
-        with engine.begin() as c:
-            c.execute(text("UPDATE trademe_crawler SET failed_pages = array_append("
-                           "COALESCE(failed_pages, ARRAY[]::integer[]), :page) "
-                           "WHERE id = :task_id;"),
-                      {"page": page, "task_id": task_id})
-
         if failed_pages <= max_failed_pages:
-            page += 1
-            continue
+            logging.warning(f"[Page {page}] {type(e).__name__}: {e}")
+            with engine.begin() as c:
+                c.execute(text("UPDATE trademe_crawler SET failed_pages = array_append("
+                               "COALESCE(failed_pages, ARRAY[]::integer[]), :page) "
+                               "WHERE id = :task_id;"),
+                          {"page": page, "task_id": task_id})
         else:
             with engine.begin() as c:
                 c.execute(text("UPDATE trademe_crawler SET stop_before_page = :page "
                                "WHERE id = :task_id;"),
                           {"page": page, "task_id": task_id})
             logging.error("Exceed maximum number pages failed to parse.")
-            break
+            exit(1)
     else:
         if not entities.items():
             logging.warning(f"Page {page} is empty.")
             failed_pages += 1
-            page += 1
             continue
         entities_df = pd.DataFrame(entities.items(), columns=['listing_id', 'entity'])
         entities_df['entity'] = entities_df['entity'].apply(lambda x: x.get('item', {}))
@@ -105,6 +116,7 @@ while True:
                                "complete_after_page = :page "
                                "WHERE id = :task_id"),
                           {"page": page, "task_id": task_id})
+            logging.info("Reach last checkout time, successfully finished.")
             break
         else:
             upsert_dataframe(
@@ -113,6 +125,3 @@ while True:
                 ['listing_id'],
                 'trademe_properties',
             )
-    page += 1
-    pbar.update(1)
-pbar.close()
