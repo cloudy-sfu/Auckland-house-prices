@@ -101,7 +101,6 @@ for page in tqdm(range(1, n_pages + 1), desc="Read properties"):
         start_time_str = entities_df['entity'].apply(
             lambda x: x.get('startDate', '').removeprefix('__date__:'))
         entities_df['start_time'] = pd.to_datetime(start_time_str, errors="coerce")
-        entities_df['entity'] = entities_df['entity'].apply(lambda x: json.dumps(x))
         entities_df['task_id'] = task_id
         if entities_df['start_time'].min() <= last_checkout_time:
             entities_df = entities_df.loc[entities_df['start_time'] > last_checkout_time, :]
