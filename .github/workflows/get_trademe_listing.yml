@@ -27,8 +27,8 @@ jobs:
 
       - name: Run the script
         env:
-          HTTP_PROXY: http://${{ secrets.PROXY_USERNAME }}:${{ secrets.PROXY_PASSWORD }}@${{ secrets.PROXY_IP }}:${{ secrets.PROXY_PORT }}
-          HTTPS_PROXY: http://${{ secrets.PROXY_USERNAME }}:${{ secrets.PROXY_PASSWORD }}@${{ secrets.PROXY_IP }}:${{ secrets.PROXY_PORT }}
+          HTTP_PROXY: ${{ secrets.HTTP_PROXY }}
+          HTTPS_PROXY: ${{ secrets.HTTP_PROXY }}
           NO_PROXY: 127.0.0.1,localhost
         run: |
           python get_trademe_listing.py
