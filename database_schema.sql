@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict syvFwljf5QO0vifnBcifscOeApIp6ISe1knUZYDbam43b6U4Ctr3WhPYD4sYpsH
+\restrict 5E5mH4SnzexjTdcyM3sGg8NPsOVuMTmzZS5iqRedhnnzRNJsSiztnFLCrgf0NNW
 
 -- Dumped from database version 17.7 (e429a59)
 -- Dumped by pg_dump version 17.7
@@ -20,6 +20,23 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 SET default_table_access_method = heap;
+
+--
+-- Name: chorus_network_outage; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.chorus_network_outage (
+    start_time timestamp with time zone,
+    incident_point jsonb,
+    incident_area jsonb,
+    role character varying(16),
+    n_impacted_services smallint,
+    description character varying(64),
+    update_time timestamp with time zone,
+    update_text text,
+    recorded_time timestamp with time zone
+);
+
 
 --
 -- Name: trademe_crawler; Type: TABLE; Schema: public; Owner: -
@@ -172,5 +189,5 @@ ALTER TABLE ONLY public.trademe_properties
 -- PostgreSQL database dump complete
 --
 
-\unrestrict syvFwljf5QO0vifnBcifscOeApIp6ISe1knUZYDbam43b6U4Ctr3WhPYD4sYpsH
+\unrestrict 5E5mH4SnzexjTdcyM3sGg8NPsOVuMTmzZS5iqRedhnnzRNJsSiztnFLCrgf0NNW
 
