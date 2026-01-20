@@ -17,9 +17,9 @@ logging.basicConfig(
 session = Session()
 
 # %% Load header.
-with open("header/chorus_config.json") as f:
+with open("headers/chorus_config.json") as f:
     header_config = json.load(f)
-with open("header/chorus_incidents.json") as f:
+with open("headers/chorus_incidents.json") as f:
     header_incidents = json.load(f)
 
 # %% Get auth.
