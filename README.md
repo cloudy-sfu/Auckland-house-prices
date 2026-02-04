@@ -23,8 +23,7 @@ Run `database_schema.sql` in database console to mock the database schema.
 
 Include the following variables into environment variables.
 
-| Variable   | Description                                                  |
-| ---------- | ------------------------------------------------------------ |
-| NEON_DB    | Connection string to Neon database. If using other database, set to connection string of your own PostgreSQL database. |
-| HTTP_PROXY | Only New Zealand residential IP address can visit trademe.co.nz (notice that Azure virtual machines cannot). GitHub Actions machines are based in United States, therefore a HTTP proxy should be provided. This variable is HTTP proxy in format of `http://<username>:<password>@<IP_or_domain>:<port>`. |
+| Variable | Description                                                  |
+| -------- | ------------------------------------------------------------ |
+| NEON_DB  | Connection string to Neon database. If using other database, set to connection string of your own PostgreSQL database. |
 
