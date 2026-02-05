@@ -6,15 +6,13 @@ Price assessment models for houses in Auckland, New Zealand
 
 
 
+Documentation: refer to https://cloudy-sfu.github.io/Auckland-house-prices
+
+
+
 ## Install
 
-### Database
 
-Create a PostgreSQL 17 database in [Neon](https://neon.com/) database, or your own PostgreSQL database.
-
-Run `database_schema.sql` in database console to mock the database schema.
-
-Import `fuel_stations.csv`  to database table `public.fuel_stations` as the initialization. The program will update this table when it gets fuel prices.
 
 
 
@@ -27,30 +25,6 @@ Include the following variables into environment variables.
 | NEON_DB        | Connection string to Neon database. If using other database, set to connection string of your own PostgreSQL database. |
 | GASPY_EMAIL    | Email of "gaspy" account.                                    |
 | GASPY_PASSWORD | Password of "gaspy" account.                                 |
-
-
-
-Main environment:
-
->   Create and activate a Python 3.13 virtual environment.
->
->   Run the following command.
->
->   ```
->   pip install -r requirements.txt
->   ```
->
-
-Dashboard environment:
-
->   Create and activate a Python 3.13 virtual environment.
->
->   Run the following command.
->
->   ```
->   pip install -r requirements-dash.txt
->   ```
->
 
 
 
