@@ -2,9 +2,9 @@
 -- PostgreSQL database dump
 --
 
-\restrict 5E5mH4SnzexjTdcyM3sGg8NPsOVuMTmzZS5iqRedhnnzRNJsSiztnFLCrgf0NNW
+\restrict VsywdhwRIcjCVIYQnewCrrC02UebF9OuYog0EHjmfeLaQyj4kFwWGXCME2UbUSh
 
--- Dumped from database version 17.7 (e429a59)
+-- Dumped from database version 17.7 (bdd1736)
 -- Dumped by pg_dump version 17.7
 
 SET statement_timeout = 0;
@@ -36,6 +36,102 @@ CREATE TABLE public.chorus_network_outage (
     update_text text,
     recorded_time timestamp with time zone
 );
+
+
+--
+-- Name: fuel_prices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.fuel_prices (
+    station_id character varying(32) NOT NULL,
+    fuel_type character varying(8) NOT NULL,
+    brand character varying(32),
+    price numeric(6,1),
+    update_time timestamp with time zone NOT NULL
+);
+
+
+--
+-- Name: TABLE fuel_prices; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.fuel_prices IS 'Records of fuel prices.';
+
+
+--
+-- Name: COLUMN fuel_prices.station_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.fuel_prices.station_id IS 'Same as "id" in "stations" table. Because query is based on geo_hash, which may not be unique to stations, "station_id" in this table may not be in the stations table.';
+
+
+--
+-- Name: COLUMN fuel_prices.fuel_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.fuel_prices.fuel_type IS 'The fuel type symbol. D - Diesel; numbers - Research Octane Number (RON).';
+
+
+--
+-- Name: COLUMN fuel_prices.brand; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.fuel_prices.brand IS 'Brand of the fuel station. If missing, the station''s brand is unknown in "gaspy".';
+
+
+--
+-- Name: COLUMN fuel_prices.price; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.fuel_prices.price IS 'Price of the fuel corresponding to "fuel_type" and uploaded at "updated_time", in unit of NZD per 100L.';
+
+
+--
+-- Name: COLUMN fuel_prices.update_time; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.fuel_prices.update_time IS 'The time that the fuel price is uploaded. It cannot be earlier than 1 days before the data is fetched.';
+
+
+--
+-- Name: fuel_stations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.fuel_stations (
+    station_id character varying(32) NOT NULL,
+    name character varying(128),
+    geo_hash character varying(8),
+    latitude double precision,
+    longitude double precision
+);
+
+
+--
+-- Name: TABLE fuel_stations; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.fuel_stations IS 'Information of fuel stations.';
+
+
+--
+-- Name: COLUMN fuel_stations.station_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.fuel_stations.station_id IS '`Original "station_key" in "gaspy", the identifier of the fuel station.';
+
+
+--
+-- Name: COLUMN fuel_stations.name; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.fuel_stations.name IS 'Name of the fuel station.';
+
+
+--
+-- Name: COLUMN fuel_stations.geo_hash; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.fuel_stations.geo_hash IS 'Geometry hash code of quadtree, which is used by "gaspy" to search fuel stations.';
 
 
 --
@@ -162,11 +258,27 @@ ALTER TABLE ONLY public.trademe_crawler ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
+-- Name: fuel_prices fuel_prices_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.fuel_prices
+    ADD CONSTRAINT fuel_prices_pk PRIMARY KEY (station_id, fuel_type, update_time);
+
+
+--
 -- Name: trademe_properties properties_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.trademe_properties
     ADD CONSTRAINT properties_pkey PRIMARY KEY (listing_id);
+
+
+--
+-- Name: fuel_stations stations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.fuel_stations
+    ADD CONSTRAINT stations_pkey PRIMARY KEY (station_id);
 
 
 --
@@ -189,5 +301,5 @@ ALTER TABLE ONLY public.trademe_properties
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 5E5mH4SnzexjTdcyM3sGg8NPsOVuMTmzZS5iqRedhnnzRNJsSiztnFLCrgf0NNW
+\unrestrict VsywdhwRIcjCVIYQnewCrrC02UebF9OuYog0EHjmfeLaQyj4kFwWGXCME2UbUSh
 
