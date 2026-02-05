@@ -1,4 +1,4 @@
-name: Get gaspy fuel prices
+name: Collect fuel prices - Gaspy
 
 on:
   schedule:
@@ -29,4 +29,4 @@ jobs:
 
       - name: Run the script
         run: |
-          python main.py
+          python fuel/get_gaspy.py

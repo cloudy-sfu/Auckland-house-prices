@@ -1,4 +1,4 @@
-name: Get Chorus Outage
+name: Collect Internet outage - Chorus
 
 on:
   schedule:
@@ -27,4 +27,4 @@ jobs:
 
       - name: Run the script
         run: |
-          python get_chorus_outage.py
+          python internet_outage/get_chorus_outage.py

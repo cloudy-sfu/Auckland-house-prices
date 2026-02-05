@@ -22,7 +22,7 @@ logging.basicConfig(
 # %% Calc last checkout
 engine = create_engine(os.environ["NEON_DB"])
 with engine.begin() as c:
-    result = c.execute(text("select max(\"solving_start_time\") from trademe_crawler "
+    result = c.execute(text("select max(\"solving_start_time\") from crawler_collect_trademe "
                             "where solving_end_time is not null;"))
     last_checkout_time = result.fetchone()[0]
 if last_checkout_time is None:
@@ -30,12 +30,12 @@ if last_checkout_time is None:
 
 # %% Initialize web crawler.
 session = Session()
-with open("headers/header_1.json", "r") as f:
+with open("properties/header_1.json", "r") as f:
     header = json.load(f)
 
 # %% Initialize meta data.
 with engine.begin() as c:
-    result = c.execute(text("insert into trademe_crawler (solving_start_time) values "
+    result = c.execute(text("insert into crawler_collect_trademe (solving_start_time) values "
                             "(NOW()) RETURNING id;"))
     task_id = result.fetchone()[0]
 
@@ -79,13 +79,13 @@ for page in tqdm(range(1, n_pages + 1), desc="Read properties"):
         if failed_pages <= max_failed_pages:
             logging.warning(f"[Page {page}] {type(e).__name__}: {e}")
             with engine.begin() as c:
-                c.execute(text("UPDATE trademe_crawler SET failed_pages = array_append("
+                c.execute(text("UPDATE crawler_collect_trademe SET failed_pages = array_append("
                                "COALESCE(failed_pages, ARRAY[]::integer[]), :page) "
                                "WHERE id = :task_id;"),
                           {"page": page, "task_id": task_id})
         else:
             with engine.begin() as c:
-                c.execute(text("UPDATE trademe_crawler SET stop_before_page = :page "
+                c.execute(text("UPDATE crawler_collect_trademe SET stop_before_page = :page "
                                "WHERE id = :task_id;"),
                           {"page": page, "task_id": task_id})
             logging.error("Exceed maximum number pages failed to parse.")
@@ -108,10 +108,10 @@ for page in tqdm(range(1, n_pages + 1), desc="Read properties"):
                 engine,
                 entities_df,
                 ['listing_id'],
-                'trademe_properties',
+                'properties_trademe',
             )
             with engine.begin() as c:
-                c.execute(text("UPDATE trademe_crawler SET solving_end_time = NOW(), "
+                c.execute(text("UPDATE crawler_collect_trademe SET solving_end_time = NOW(), "
                                "complete_after_page = :page "
                                "WHERE id = :task_id"),
                           {"page": page, "task_id": task_id})
@@ -122,5 +122,5 @@ for page in tqdm(range(1, n_pages + 1), desc="Read properties"):
                 engine,
                 entities_df,
                 ['listing_id'],
-                'trademe_properties',
+                'properties_trademe',
             )

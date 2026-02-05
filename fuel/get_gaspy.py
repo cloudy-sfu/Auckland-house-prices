@@ -15,12 +15,12 @@ from postgresql_upsert import upsert_dataframe
 
 # %% Initialize.
 logging.basicConfig(
-    handlers=[logging.StreamHandler(sys.stdout)],
     level=logging.INFO,
     format="[%(asctime)s] [%(levelname)s] %(message)s",
     datefmt='%Y-%m-%d %H:%M:%S',
+    stream=sys.stdout,
 )
-with open("header/dart_header.json") as f:
+with open("fuel/dart_header.json") as f:
     dart_header = json.load(f)
 stations_chunk_size = 39
 neon_db = os.environ["NEON_DB"]

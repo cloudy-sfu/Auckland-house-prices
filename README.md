@@ -82,8 +82,3 @@ Steps:
 >
 >   Copy the link from output of terminal and visit the link in browser.
 
-Results:
-
-![](./assets/image-20260113133130403.png)
-
-![](./assets/image-20260113133114878.png)

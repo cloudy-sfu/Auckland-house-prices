@@ -15,9 +15,9 @@ if not db_connection_str:
     raise ValueError("NEON_DB environment variable is not set.")
 
 engine = create_engine(db_connection_str)
-with open("sqls/get_latest_fuel_price.sql") as f:
+with open("fuel/get_latest_fuel_price.sql") as f:
     sql_latest_price = f.read()
-with open("sqls/get_fuel_price.sql") as f:
+with open("fuel/get_fuel_price.sql") as f:
     sql_price_per_station = f.read()
 
 def get_latest_prices(fuel_type):
@@ -32,7 +32,7 @@ def get_historical_prices(station_id):
 
 def get_station_name(station_id):
     try:
-        query = "SELECT name FROM public.stations WHERE station_id = %s"
+        query = "SELECT name FROM public.fuel_stations WHERE station_id = %s"
         df = pd.read_sql(query, engine, params=(station_id,))
         if not df.empty:
             return df.iloc[0]['name']
