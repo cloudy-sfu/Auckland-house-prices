@@ -25,6 +25,7 @@ Create a `crawler_colelct_trademe.sh` script and write the following content.
 cd $base_dir
 source .venv/bin/activate
 export NEON_DB="$neon_db"
+export PYTHONPATH=$PYTHONPATH:$base_dir
 python properties/get_trademe_listing.py > log.txt 2>&1
 ```
 

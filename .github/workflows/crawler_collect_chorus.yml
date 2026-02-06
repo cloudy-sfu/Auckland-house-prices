@@ -11,6 +11,7 @@ jobs:
 
     env:
       NEON_DB: ${{ secrets.NEON_DB }}
+      PYTHONPATH: . 
 
     steps:
       - name: Checkout code
