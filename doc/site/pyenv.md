@@ -6,6 +6,7 @@ Find Python version and the requirements file name corresponding to the job.
 | --------------- | -------------------- | ----------- | ----------------------- |
 | Data collection | GitHub Actions       | 3.12        | `requirements.txt`      |
 |                 | Self-hosted          | 3.13        | `requirements.txt`      |
+|                 | Get CPI              | 3.13        | `requirements.txt`      |
 | Applications    | Fuel Price Dashboard | 3.13        | `requirements-dash.txt` |
 |                 |                      |             |                         |
 

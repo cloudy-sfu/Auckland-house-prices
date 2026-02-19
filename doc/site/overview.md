@@ -6,6 +6,8 @@ graph LR
         Gaspy
         Chorus
         Trademe
+        EQI["Schooling Equity Index"]
+        Interest
     end
 
     subgraph DataCollection [Data Collection]
@@ -16,26 +18,27 @@ graph LR
         subgraph SH [Self-hosted]
         	S_Trademe["Crawler: collect #34;trademe#34;"]
         end
+        S_EQI["Download<br>Schooling Equity Index"]
+        S_interest["Crawler: get #34;interest#34;"]
     end
 
     subgraph Modules [Modules]
         Fuel
         InternetOutage[Internet outage]
         Properties
+        Schools
+        Macroeconomics
     end
 
     subgraph Applications [Applications]
         Dashboard[Fuel price dashboard]
     end
 
-    %% Flow 1
     Gaspy --> S_Gaspy --> Fuel --> Dashboard
-    
-    %% Flow 2
     Chorus --> S_Chorus --> InternetOutage
-    
-    %% Flow 3
     Trademe --> S_Trademe --> Properties
+    EQI --> S_EQI --> Schools
+    Interest --> S_interest --> Macroeconomics
 
     %% Styling
     style DataSource fill:none,stroke:#333,stroke-dasharray: 5 5

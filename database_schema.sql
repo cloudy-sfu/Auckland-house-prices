@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict E0oFsVyCXTeZuduJHXAc1hxDVEXZMPboYLY5d992s1lYs2lBEljD107AKPRpYBq
+\restrict fTT989gqChLJ4VSEw33CHg39v9kJdqL3e3YcccuyiFDf3ZNSqd55KMLdhy25xQn
 
 -- Dumped from database version 17.7 (bdd1736)
 -- Dumped by pg_dump version 17.7
@@ -191,6 +191,102 @@ CREATE TABLE public.internet_outage_chorus (
 
 
 --
+-- Name: macroeconomics_cpi_all; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.macroeconomics_cpi_all (
+    year smallint NOT NULL,
+    quarter smallint NOT NULL,
+    value double precision
+);
+
+
+--
+-- Name: macroeconomics_cpi_non_tradable; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.macroeconomics_cpi_non_tradable (
+    year smallint NOT NULL,
+    quarter smallint NOT NULL,
+    value double precision
+);
+
+
+--
+-- Name: macroeconomics_hla_low; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.macroeconomics_hla_low (
+    year smallint NOT NULL,
+    month smallint NOT NULL,
+    value double precision
+);
+
+
+--
+-- Name: macroeconomics_hla_mid; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.macroeconomics_hla_mid (
+    year smallint NOT NULL,
+    month smallint NOT NULL,
+    value double precision
+);
+
+
+--
+-- Name: macroeconomics_house_median_price; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.macroeconomics_house_median_price (
+    year smallint NOT NULL,
+    month smallint NOT NULL,
+    value integer
+);
+
+
+--
+-- Name: macroeconomics_mortgage_rate; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.macroeconomics_mortgage_rate (
+    date date NOT NULL,
+    _float double precision,
+    _0_5_years double precision,
+    _1_years double precision,
+    _1_5_years double precision,
+    _2_years double precision,
+    _3_years double precision,
+    _4_years double precision,
+    _5_years double precision
+);
+
+
+--
+-- Name: macroeconomics_ocr; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.macroeconomics_ocr (
+    date date NOT NULL,
+    value double precision
+);
+
+
+--
+-- Name: TABLE macroeconomics_ocr; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.macroeconomics_ocr IS 'NZ official cash rates';
+
+
+--
+-- Name: COLUMN macroeconomics_ocr.date; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.macroeconomics_ocr.date IS 'Announced date';
+
+
+--
 -- Name: properties_trademe; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -221,6 +317,20 @@ COMMENT ON COLUMN public.properties_trademe.start_time IS 'Start time of the hou
 --
 
 COMMENT ON COLUMN public.properties_trademe.task_id IS 'The record is retrieved by which web crawler job. Foreign key, determined by trademe_crawler.id ';
+
+
+--
+-- Name: schools_equity_index; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.schools_equity_index (
+    school_number smallint NOT NULL,
+    school_name character varying(96),
+    value_2023 smallint,
+    value_2024 smallint,
+    value_2025 smallint,
+    value_2026 smallint
+);
 
 
 --
@@ -259,11 +369,75 @@ ALTER TABLE ONLY public.fuel_prices
 
 
 --
+-- Name: macroeconomics_cpi_all macroeconomics_cpi_all_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.macroeconomics_cpi_all
+    ADD CONSTRAINT macroeconomics_cpi_all_pk PRIMARY KEY (year, quarter);
+
+
+--
+-- Name: macroeconomics_cpi_non_tradable macroeconomics_cpi_non_tradable_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.macroeconomics_cpi_non_tradable
+    ADD CONSTRAINT macroeconomics_cpi_non_tradable_pk PRIMARY KEY (year, quarter);
+
+
+--
+-- Name: macroeconomics_hla_low macroeconomics_hla_low_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.macroeconomics_hla_low
+    ADD CONSTRAINT macroeconomics_hla_low_pk PRIMARY KEY (year, month);
+
+
+--
+-- Name: macroeconomics_hla_mid macroeconomics_hla_mid_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.macroeconomics_hla_mid
+    ADD CONSTRAINT macroeconomics_hla_mid_pk PRIMARY KEY (year, month);
+
+
+--
+-- Name: macroeconomics_house_median_price macroeconomics_house_median_price_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.macroeconomics_house_median_price
+    ADD CONSTRAINT macroeconomics_house_median_price_pk PRIMARY KEY (year, month);
+
+
+--
+-- Name: macroeconomics_mortgage_rate macroeconomics_mortgage_rate_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.macroeconomics_mortgage_rate
+    ADD CONSTRAINT macroeconomics_mortgage_rate_pk PRIMARY KEY (date);
+
+
+--
+-- Name: macroeconomics_ocr macroeconomics_ocr_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.macroeconomics_ocr
+    ADD CONSTRAINT macroeconomics_ocr_pk PRIMARY KEY (date);
+
+
+--
 -- Name: properties_trademe properties_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.properties_trademe
     ADD CONSTRAINT properties_pkey PRIMARY KEY (listing_id);
+
+
+--
+-- Name: schools_equity_index schools_equity_index_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.schools_equity_index
+    ADD CONSTRAINT schools_equity_index_pk PRIMARY KEY (school_number);
 
 
 --
@@ -294,5 +468,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict E0oFsVyCXTeZuduJHXAc1hxDVEXZMPboYLY5d992s1lYs2lBEljD107AKPRpYBq
+\unrestrict fTT989gqChLJ4VSEw33CHg39v9kJdqL3e3YcccuyiFDf3ZNSqd55KMLdhy25xQn
 

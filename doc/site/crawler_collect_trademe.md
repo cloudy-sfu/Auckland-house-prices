@@ -10,9 +10,13 @@ This job collects currently listing properties (houses) for sale in Auckland fro
 
 
 
+Data source: [Auckland properties](https://www.trademe.co.nz/a/property/residential/sale/auckland)
+
+
+
 ## Install
 
-![](https://shields.io/badge/OS-Linux-blue)
+![](https://shields.io/badge/OS-Linux-blue) 
 
 Let `$base_dir` be the root directory of this (Auckland house pricing) program.
 
@@ -32,8 +36,6 @@ python properties/get_trademe_listing.py > log.txt 2>&1
 >   [!NOTE]
 >
 >   Line 4 is necessary, because this script will be triggered by `crontab`. There is no way to define this environment variables before the script is called, unless registering the variable to the global user/machine's environment variables.
-
-
 
 >   [!TIP]
 >
@@ -71,7 +73,9 @@ Run the following command.
 date
 ```
 
-Ensure the output is in NZST or NZDT time zone. Otherwise, calculate time zone conversion manually and customize `crontab` config.
+>   [!NOTE]
+>
+>   Assume the system time zone is NZST or NZDT. Otherwise, the job starting time will be different from that described in usage.
 
 Run the following command.
 
