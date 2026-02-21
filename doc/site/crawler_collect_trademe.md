@@ -1,26 +1,22 @@
-# Crawler: collect "trademe"
+# Collect Auckland properties
 
 This job collects currently listing properties (houses) for sale in Auckland from "trademe".
 
->   [!WARNING]
->
->   This job requires New Zealand residence IP and HTTPS connection.
->
->   Foreign or data center source IP doesn't work. HTTP proxy doesn't work.
+![](./assets/OS-Linux-blue.svg)
+![](https://shields.io/badge/dependencies-Python_3.13-blue)
+![](https://shields.io/badge/network-New_Zealand_IP_HTTPS-brown)
 
-
-
-Data source: [Auckland properties](https://www.trademe.co.nz/a/property/residential/sale/auckland)
+Data source: https://www.trademe.co.nz/a/property/residential/sale/auckland
 
 
 
 ## Install
 
-![](https://shields.io/badge/OS-Linux-blue) 
-
 Let `$base_dir` be the root directory of this (Auckland house pricing) program.
 
 Let `$neon_db` be the connection string to the database.
+
+Activate Python environment "Data collection - Self-hosted".
 
 Create a `crawler_colelct_trademe.sh` script and write the following content.
 

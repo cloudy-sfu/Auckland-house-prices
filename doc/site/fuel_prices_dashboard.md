@@ -4,7 +4,9 @@
 
 ## Usage
 
-Run the following command.
+Activate Python environment "Dashboard".
+
+Run the following command in terminal.
 
 ```
 python fuel/dashboard.py

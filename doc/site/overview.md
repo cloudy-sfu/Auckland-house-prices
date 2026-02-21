@@ -6,20 +6,20 @@ graph LR
         Gaspy
         Chorus
         Trademe
-        EQI["Schooling Equity Index"]
+        EduCounts[Education Counts]
         Interest
     end
 
     subgraph DataCollection [Data Collection]
         subgraph GHA [GitHub Actions]
-            S_Gaspy["Crawler: collect #34;gaspy#34;"]
-            S_Chorus["Crawler: collect #34;chorus#34;"]
+            S_Gaspy[Collect fuel prices]
+            S_Chorus[Collect Internet outage map]
         end
         subgraph SH [Self-hosted]
-        	S_Trademe["Crawler: collect #34;trademe#34;"]
+        	S_Trademe[Collect Auckland properties]
         end
-        S_EQI["Download<br>Schooling Equity Index"]
-        S_interest["Crawler: get #34;interest#34;"]
+        S_schools[Get school information]
+        S_interest[Get macroeconomics]
     end
 
     subgraph Modules [Modules]
@@ -37,7 +37,7 @@ graph LR
     Gaspy --> S_Gaspy --> Fuel --> Dashboard
     Chorus --> S_Chorus --> InternetOutage
     Trademe --> S_Trademe --> Properties
-    EQI --> S_EQI --> Schools
+    EduCounts --> S_schools --> Schools
     Interest --> S_interest --> Macroeconomics
 
     %% Styling

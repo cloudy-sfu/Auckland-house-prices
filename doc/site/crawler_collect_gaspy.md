@@ -1,4 +1,4 @@
-# Crawler: collect "gaspy"
+# Collect fuel prices
 
 This job collects the fuel (petrol and diesel) prices every day in most petrol stations in Auckland, Hamilton, Wellington, and Christchurch. It includes the prices of different types of fuels, alongside with the location of the fuel station.
 

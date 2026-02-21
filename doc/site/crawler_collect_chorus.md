@@ -1,8 +1,8 @@
-# Crawler: collect "chorus"
+# Collect Internet outage map
 
 This job collects Internet outage area and time from "chorus", which is the monopoly Internet fiber installer in Auckland. The database includes not only Auckland, but also other cities where "chorus" provides Internet hardware.
 
-Data source: [Chorus outage map](https://www.chorus.co.nz/help/tools/internet-outages-map)
+Data source: https://www.chorus.co.nz/help/tools/internet-outages-map
 
 ## Usage
 
