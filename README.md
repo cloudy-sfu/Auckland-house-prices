@@ -38,11 +38,25 @@ Run the following command in terminal.
 pip install -r $req_path
 ```
 
-### Scheduled jobs
+### Initialization
 
-#### GitHub Actions
+#### School information
 
-Deploy this program in GitHub, and ensure all the GitHub Actions are active.
+Download school information from https://www.educationcounts.govt.nz/directories/list-of-nz-schools by clicking "Download the whole directory".
+
+Let the downloaded file path be `$input_path`.
+
+Activate Python environment "Data collection - Self-hosted".
+
+Run the following command in terminal.
+
+```
+python schools/get_school_meta.py --input_path $input_path
+```
+
+Redo this section when necessary, to prevent data from outdated.
+
+#### Fuel prices
 
 Import data in `fuel/fuel_stations.csv` to `public.fuel_stations` table in database.
 
@@ -52,12 +66,20 @@ Import data in `fuel/fuel_stations.csv` to `public.fuel_stations` table in datab
 >
 >   To start with, the program needs a initial `fuel_stations` table.
 
-Besides environment variables in the global installation guidance, also include the following variables into environment variables (GitHub Actions secrets).
+Besides environment variables in the global installation guidance, also include the following variables into GitHub Actions secrets (in the account which will host GitHub Actions, details in "Scheduled jobs > GitHub Actions" section).
 
 | Variable       | Description                  |
 | -------------- | ---------------------------- |
 | GASPY_EMAIL    | Email of "gaspy" account.    |
 | GASPY_PASSWORD | Password of "gaspy" account. |
+
+### Scheduled jobs
+
+#### GitHub Actions
+
+Deploy this program in GitHub and enable GitHub Actions for this repository.
+
+Manually run each scheduled job once, to initially save data into database and ensure all the GitHub Actions are active.
 
 #### Self-hosted
 
@@ -132,76 +154,6 @@ crontab -e
 
 ```
 0 16 * * 1-5 $base_dir/crawler_colelct_trademe.sh
-```
-
-### Manual updates
-
-Besides scheduled jobs, there are other data source which needs to update but keep the full history. You only need to run this section once before executing the applications which use the output tables mentioned below.
-
-The frequency column is the update frequency of original data. You don't need to rerun the corresponding script if the original data isn't updated since last run. However, you should run it if haven't updated it longer than the update frequency.
-
-
-| Metrics                     | Frequency      | Output tables                                                |
-| --------------------------- | -------------- | ------------------------------------------------------------ |
-| Consumer price index        | Every 3 months | `public.macroeconomics_cpi_all` & `public.macroeconomics_cpi_non_tradable` |
-| Official cash rate          | Weekly         | `public.macroeconomics_ocr`                                  |
-| Auckland house median price | Monthly        | `public.macroeconomics_house_median_price`                   |
-| Home Loan Affordability     | Monthly        | `public.macroeconomics_hla_low` & `public.macroeconomics_hla_mid` |
-| School information          | Daily          | `public.schools`                                             |
-| Mortgage rate               | Weekly         | `public.macroeconomics_mortgage_rate`                        |
-
-Activate Python environment "Data collection - Self-hosted".
-
-#### Consumer price index
-
-Run the following command in terminal.
-
-```
-python macroeconomics/cpi.py
-```
-
-#### Official cash rate
-
-Run the following command in terminal.
-
-```
-python macroeconomics/ocr.py
-```
-
-#### Auckland house median price
-
-Run the following command in terminal.
-
-```
-python macroeconomics/house_median_price.py
-```
-
-#### Home Loan Affordability
-
-Run the following command in terminal.
-
-```
-python macroeconomics/hla.py
-```
-
-#### School information
-
-Download school information from https://www.educationcounts.govt.nz/directories/list-of-nz-schools by clicking "Download the whole directory".
-
-Let the downloaded file path be `$input_path`.
-
-Run the following command in terminal.
-
-```
-python schools/get_school_meta.py --input_path $input_path
-```
-
-#### Mortgage rate
-
-Run the following command in terminal.
-
-```
-python macroeconomics/mortgage_rate.py
 ```
 
 

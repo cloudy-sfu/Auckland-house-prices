@@ -1,0 +1,31 @@
+name: Collect state houses (newly developing) - Kainga Ora
+
+on:
+  schedule:
+    - cron: '0 8 20 * *'  # 20th every month 8:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    env:
+      NEON_DB: ${{ secrets.NEON_DB }}
+      PYTHONPATH: . 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run the script
+        run: |
+          python properties/get_state_houses_new_dev.py
