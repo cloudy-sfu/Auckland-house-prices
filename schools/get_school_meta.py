@@ -1,23 +1,39 @@
+import logging
 import os
 import re
-from argparse import ArgumentParser
+import sys
 
 import pandas as pd
+import requests
 from sqlalchemy import create_engine
 
 from postgresql_upsert import upsert_dataframe
 
-# %% Input arguments.
-parser = ArgumentParser()
-parser.add_argument("--input_path", required=True)
-cmd, _ = parser.parse_known_args()
-
-# Source: https://www.educationcounts.govt.nz/directories/list-of-nz-schools
-# Noun definitions: https://www.educationcounts.govt.nz/site-info/glossary-filter
-input_path = cmd.input_path
+# %% Setup logger.
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] [%(levelname)s] %(message)s",
+    datefmt='%Y-%m-%d %H:%M:%S',
+    stream=sys.stdout,
+)
 
 # %% Get data.
-schools = pd.read_csv(input_path, skiprows=16)
+session = requests.Session()
+# Source: https://www.educationcounts.govt.nz/directories/list-of-nz-schools
+# API documentation: https://catalogue.data.govt.nz/api/1/util/snippet/api_info.html?resource_id=4b292323-9fcc-41f8-814b-3c7b19cf14b3
+# Noun definitions: https://www.educationcounts.govt.nz/site-info/glossary-filter
+response = session.get(
+    "https://catalogue.data.govt.nz/api/3/action/datastore_search_sql",
+    params={"sql": "SELECT * FROM \"4b292323-9fcc-41f8-814b-3c7b19cf14b3\""}
+)
+response.raise_for_status()
+try:
+    response_json = response.json()
+except requests.exceptions.JSONDecodeError as e:
+    logging.info(response.text)
+    raise e
+schools = response_json['result']['records']
+schools = pd.DataFrame(schools)
 schools = schools.convert_dtypes()
 
 # %% School types.
@@ -31,7 +47,7 @@ years_pre_defined = {
 
 
 def infer_school_type(row):
-    school_type = row['School Type']
+    school_type = row['Org_Type']
     definition = row['Definition']
 
     if pd.isna(school_type):
@@ -57,7 +73,7 @@ def infer_school_type(row):
     return year_from, year_to, school_type_1
 
 schools[['year_from', 'year_to', 'school_type']] = (
-    schools[['School Type', 'Definition']].apply(
+    schools[['Org_Type', 'Definition']].apply(
         infer_school_type, axis=1, result_type='expand'))
 
 # %% Institute language.
@@ -80,12 +96,12 @@ languages = {
 
 
 def infer_languages(row):
-    language = languages.get(row['Language of Instruction'], (False, False, False))
+    language = languages.get(row['Language_of_Instruction'], (False, False, False))
     return language
 
 
 schools[['lang_eng', 'lang_maori', 'lang_pacific']] = (
-    schools[['Language of Instruction']].apply(
+    schools[['Language_of_Instruction']].apply(
         infer_languages, axis=1, result_type="expand"))
 
 # %% Public or private schools.
@@ -106,27 +122,25 @@ def infer_gender(gender):
         gender_ = pd.NA
     return gender_
 
-schools['gender'] = schools["Gender of Students"].apply(infer_gender)
+schools['gender'] = schools["CoEd_Status"].apply(infer_gender)
 
-# %% Boolean columns.
-schools['enrollment_scheme'] = schools['Enrolment Scheme'] == 'Yes'
-schools['boarding_facilities'] = schools['Boarding Facilities'] == 'Yes'
-schools['is_open'] = schools['Status'] == 'Open'
-
-# %% To numeric.
-schools["eqi"] = pd.to_numeric(schools["Equity Index (EQI)"], errors="coerce")
+# %% Other columns format converter.
+schools['enrollment_scheme'] = schools['Enrolment_Scheme'] == 'Yes'
+schools['boarding_facilities'] = schools['BoardingFacilities'] == 'Yes'
+schools["eqi"] = pd.to_numeric(schools["EQi_Index"], errors="coerce")
+schools['open_date'] = pd.to_datetime(schools['DateSchoolOpened']).dt.date.fillna(pd.NA)
 
 # %% Directly convert columns.
 schools.rename(columns={
-    "School Number": "school_number",
-    "School Name": "school_name",
-    "Street": "street",
-    "Suburb": "suburb",
-    "Town / City": "city",
+    "School_Id": "school_number",
+    "Org_Name": "school_name",
+    "Add1_Line1": "street",
+    "Add1_Suburb": "suburb",
+    "Add1_City": "city",
     "Latitude": "latitude",
     "Longitude": "longitude",
-    "Total School Roll": "students_total",
-    "European / Pākehā": "students_european",
+    "Total": "students_total",
+    "European": "students_european",
     "Māori": "students_maori",
     "Pacific": "students_pacific",
     "Asian": "students_asian",
@@ -156,7 +170,6 @@ schools = schools[[
     "students_others",
     "students_international",
     "boarding_facilities",
-    "is_open",
     "year_from",
     "year_to",
     "is_public",
@@ -164,6 +177,7 @@ schools = schools[[
     "lang_eng",
     "lang_maori",
     "lang_pacific",
+    "open_date"
 ]]
 
 # %% Export.
@@ -176,3 +190,4 @@ with engine.begin() as c:
             ["school_number"],
             "schools"
         )
+logging.info("Execution successful.")

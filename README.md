@@ -40,22 +40,6 @@ pip install -r $req_path
 
 ### Initialization
 
-#### School information
-
-Download school information from https://www.educationcounts.govt.nz/directories/list-of-nz-schools by clicking "Download the whole directory".
-
-Let the downloaded file path be `$input_path`.
-
-Activate Python environment "Data collection - Self-hosted".
-
-Run the following command in terminal.
-
-```
-python schools/get_school_meta.py --input_path $input_path
-```
-
-Redo this section when necessary, to prevent data from outdated.
-
 #### Fuel prices
 
 Import data in `fuel/fuel_stations.csv` to `public.fuel_stations` table in database.
@@ -73,15 +57,15 @@ Besides environment variables in the global installation guidance, also include 
 | GASPY_EMAIL    | Email of "gaspy" account.    |
 | GASPY_PASSWORD | Password of "gaspy" account. |
 
-### Scheduled jobs
+## Scheduled jobs
 
-#### GitHub Actions
+### GitHub Actions
 
 Deploy this program in GitHub and enable GitHub Actions for this repository.
 
 Manually run each scheduled job once, to initially save data into database and ensure all the GitHub Actions are active.
 
-#### Self-hosted
+### Self-hosted
 
 Create and activate "Data collection - Self-hosted" Python virtual environment.
 
@@ -89,71 +73,64 @@ Let `$BASE_DIR` be the root directory of this program.
 
 >   [!note]
 >
->   **Telegram notification (optional)**
->
->   To send the log file to Telegram group, letting you get notified, follow the steps below.
->
->   Create a new bot in telegram.
->
->   Let `${BOT_TOKEN|` be the robot's access token.
->
->   Create a group and invite the bot.
->
->   Send any message in the group.
->
->   Visit `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates`. Find the following message in the response.
+>   The system time zone should be NZST or NZDT. Otherwise, the job starting time will be different from described. Run the following command in terminal to confirm.
 >
 >   ```
->   "from":{"id": ..., "is_bot":false, "first_name": ...,"language_code":"en"},
->   ```
->
->   Let `${CHAT_ID|` be the value in `id` field in this response.
->
->   Append the following content to each recurrent executed script. (You can customized the caption in second line to declare which exact scripts created this log.)
->
->   ```bash
->   curl -s -F document=@"log.txt" \
->       -F caption="Auckland houses log" \
->       "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument?chat_id=${CHAT_ID}" > /dev/null
+>   date
 >   ```
 
+#### Trademe properties listing
 
-Create a `crawler_colelct_trademe.sh` script and write the following content.
+Create a `collect_trademe.sh` script and write the following content.
 
 ```bash
 #!/bin/bash
 cd $BASE_DIR
 source .venv/bin/activate
+# necessary because environment variables aren't guaranteed to be defined before called.
 export NEON_DB="$NEON_DB"
 export PYTHONPATH=$PYTHONPATH:$BASE_DIR
 python properties/get_trademe_listing.py > log.txt 2>&1
 ```
 
->   [!note]
->
->   Line 4 is necessary, because this script will be triggered by `crontab`. There is no way to define this environment variables before the script is called, unless registering the variable to the global user/machine's environment variables.
-
 Run the following command.
 
-```
-date
-```
-
->   [!note]
->
->   Assume the system time zone is NZST or NZDT. Otherwise, the job starting time will be different from described.
-
-Run the following command.
-
-```
-chmod +x $base_dir/crawler_colelct_trademe.sh
+```bash
+chmod +x $base_dir/colelct_trademe.sh
 crontab -e
 ```
 
 `crontab` config file will be open. Append the following content to the end of the file and save.
 
+```bash
+0 16 * * 1-5 $base_dir/crawler_colelct_trademe.sh  # Work days 16:00
 ```
-0 16 * * 1-5 $base_dir/crawler_colelct_trademe.sh
+
+#### School information
+
+Create a `collect_schools.sh` script and write the following content.
+
+```bash
+#!/bin/bash
+cd $BASE_DIR
+source .venv/bin/activate
+# necessary because environment variables aren't guaranteed to be defined before called.
+export NEON_DB="$NEON_DB"
+export PYTHONPATH=$PYTHONPATH:$BASE_DIR
+python schools/get_school_meta.py > log.txt 2>&1
+```
+
+Run the following command.
+
+```bash
+chmod +x $base_dir/collect_schools.sh
+crontab -e
+```
+
+`crontab` config file will be open. Append the following content to the end of the file and save.
+
+```bash
+0 0 1 * * $base_dir/collect_schools.sh  # 1st of each month 0:00
 ```
 
 
