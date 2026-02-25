@@ -3,6 +3,7 @@
 Price assessment models for houses in Auckland, New Zealand
 
 ![](https://shields.io/badge/dependencies-Python_3.13-blue)
+![](https://shields.io/badge/dependencies-New_Zealand_residential_IP-blue)
 
 ## Install
 
@@ -66,6 +67,8 @@ Deploy this program in GitHub and enable GitHub Actions for this repository.
 Manually run each scheduled job once, to initially save data into database and ensure all the GitHub Actions are active.
 
 ### Self-hosted
+
+These jobs must be self-hosted in New Zealand residential IP address, otherwise jobs will be blocked by their target websites.
 
 Create and activate "Data collection - Self-hosted" Python virtual environment.
 
