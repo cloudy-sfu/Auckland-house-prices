@@ -54,7 +54,7 @@ def regex_integer(text):
     return int_1
 
 # %% Get local bound list.
-response = session.get("https://engage.kaingaora.govt.nz/auckland")
+response = session.get("https://engage.kaingaora.govt.nz/auckland", headers=header)
 response.raise_for_status()
 response_text = BeautifulSoup(response.text, 'html.parser')
 local_board_cards = response_text.find_all("article", {"data-project-location": "[\"Auckland\"]"})
@@ -91,14 +91,32 @@ for local_board_card in tqdm(local_board_cards):
         for category in props_dict.get('categories', []):
             categories_mapping[category['categoryID']] = category['name']
 
+        layer_mapping = {}
+        for layer in props_dict.get('layers', []):
+            if layer.get('layerType') == 'geojson' and layer.get('file'):
+                label = layer.get('layerLabel', '').removesuffix('boundary').strip()
+                layer_mapping[label] = layer['file']
+
         for marker in props_dict.get('infoMarkers', []):
             info_marker_id = marker.get('infoMarkerID')
             if info_marker_id is None:
                 continue
 
             address = marker.get('infoMarkerTitle', '').strip()
-            if (address == "N/A") or ("Example Street" in address):
+            if (address == "N/A") or (address == "n/a") or ("Example Street" in address):
                 continue
+
+            geom_obj = pd.NA
+            if address in layer_mapping:
+                try:
+                    response_1 = session.get(layer_mapping[address], timeout=5)
+                    response_1_json = response_1.json()
+                    geom_obj = response_1_json['features'][0]['geometry']
+                except Exception as e:
+                    logging.warning(
+                        f"Fail to parse geometry area. Object ID: {info_marker_id}. "
+                        f"Boundary geometry URL: {layer_mapping[address]}\n"
+                        f"{e}")
 
             # Clean HTML from the description
             raw_desc = marker.get('infoMarkerDescription') or ""
@@ -130,9 +148,8 @@ for local_board_card in tqdm(local_board_cards):
                     progress = planned_completion = pd.NA
 
             # Parse the embedded GeoJSON string to a Shapely Geometry (Point/Polygon)
-            geom_obj = None
             geo_str = marker.get('infoMarkerGeo')
-            if geo_str:
+            if geo_str and pd.isna(geom_obj):
                 try:
                     geo_json = json.loads(geo_str)
                     # The 'geometry' key within the Feature contains the coordinates & type
@@ -142,7 +159,7 @@ for local_board_card in tqdm(local_board_cards):
 
             # Match Type from Categories
             cat_id = marker.get('infoMarkerCategoryID')
-            item_type = categories_mapping.get(cat_id, "Unknown Category")
+            item_type = categories_mapping.get(cat_id, "").strip()
 
             state_houses.append({
                 "info_marker_id": info_marker_id,
