@@ -11,6 +11,8 @@ cat > "$JOB_SCRIPT_PATH" <<EOF
 cd $BASE_DIR
 source .venv/bin/activate
 export NEON_DB="$NEON_DB"
+export TG_BOT_TOKEN="$TG_BOT_TOKEN"
+export TG_CHAT_ID="$TG_CHAT_ID"
 export PYTHONPATH=\$PYTHONPATH:$BASE_DIR
 python schools/get_school_meta.py
 EOF
@@ -20,7 +22,6 @@ chmod +x "$JOB_SCRIPT_PATH"
 # 1st of each month 0:00 UTC+12/UTC+13
 CRON_JOB="0 0 1 * * $JOB_SCRIPT_PATH"
 # Ref: https://man7.org/linux/man-pages/man1/crontab.1.html
-(crontab -l 2>/dev/null | grep -Fq "$JOB_SCRIPT_PATH") || \
-  (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
+(crontab -l 2>/dev/null | grep -v "$JOB_SCRIPT_PATH"; echo "$CRON_JOB") | crontab -
 
 echo "Done. $JOB_SCRIPT_PATH created and cron job registered."

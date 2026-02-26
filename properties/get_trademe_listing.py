@@ -7,16 +7,18 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from requests import Session
 from sqlalchemy import create_engine, text
-from tqdm import tqdm
 
 from postgresql_upsert import upsert_dataframe
+from telegram_logger import TelegramHandler
 
 # %% Setup logger.
 logging.basicConfig(
     level=logging.INFO,
-    format="[%(asctime)s] [%(levelname)s] %(message)s",
-    datefmt='%Y-%m-%d %H:%M:%S',
-    stream=sys.stdout,
+    format="[%(levelname)s] %(pathname)s %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        TelegramHandler(os.environ.get("TG_BOT_TOKEN"), os.environ.get("TG_CHAT_ID"))
+    ],
 )
 
 # %% Calc last checkout
@@ -59,7 +61,8 @@ except Exception as e:
 
 max_failed_pages = 5
 failed_pages = 0
-for page in tqdm(range(1, n_pages + 1), desc="Read properties"):
+for page in range(1, n_pages + 1):
+    logging.info(f"Start reading page {page}.")
     try:
         response = session.get(
             "https://www.trademe.co.nz/a/property/residential/sale/auckland",

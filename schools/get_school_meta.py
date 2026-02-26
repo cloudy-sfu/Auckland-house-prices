@@ -8,13 +8,16 @@ import requests
 from sqlalchemy import create_engine
 
 from postgresql_upsert import upsert_dataframe
+from telegram_logger import TelegramHandler
 
 # %% Setup logger.
 logging.basicConfig(
     level=logging.INFO,
-    format="[%(asctime)s] [%(levelname)s] %(message)s",
-    datefmt='%Y-%m-%d %H:%M:%S',
-    stream=sys.stdout,
+    format="[%(levelname)s] %(pathname)s %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        TelegramHandler(os.environ.get("TG_BOT_TOKEN"), os.environ.get("TG_CHAT_ID"))
+    ],
 )
 
 # %% Get data.
