@@ -29,12 +29,15 @@ neon_db = os.environ["NEON_DB"]
 engine = create_engine(neon_db)
 with engine.connect() as c:
     stations = pd.read_sql("select * from fuel_stations", c)
+stations.set_index("station_id", inplace=True)
 initial_stations = pd.read_csv("fuel/fuel_stations.csv")
 initial_stations.rename(columns={"id": "station_id"}, inplace=True)
 del initial_stations["city"]
-stations = pd.merge(stations, initial_stations, how="outer", on="station_id")
+initial_stations.set_index("station_id", inplace=True)
+stations = stations.combine_first(initial_stations).reset_index()
 stations.sort_values(by='geo_hash', inplace=True)
-stations['geo_hash_len'] = stations['geo_hash'].apply(len)
+stations.dropna(subset=["geo_hash"], inplace=True)
+stations['geo_hash_len'] = stations['geo_hash'].str.len()
 stations_chunks = []
 for length, subset in stations.groupby('geo_hash_len'):
     for i in range(0, subset.shape[0], stations_chunk_size):
