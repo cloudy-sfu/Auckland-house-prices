@@ -36,7 +36,7 @@ Run the following command in terminal.
 pip install -r $req_path
 ```
 
-Include the following environment variables in all the environments (computers).
+Add the following variables into environment variables in all the environments (computers).
 
 | Variable | Description                                                  |
 | -------- | ------------------------------------------------------------ |
@@ -67,7 +67,7 @@ These jobs must be self-hosted in New Zealand residential IP address, otherwise 
 
 Create and activate "Data collection - Self-hosted" Python virtual environment.
 
-Let `$BASE_DIR` be the root directory of this program.
+Let `$BASE_DIR` and the current directory be the root directory of this program.
 
 >   [!note]
 >
@@ -77,58 +77,12 @@ Let `$BASE_DIR` be the root directory of this program.
 >   date
 >   ```
 
-#### Trademe properties listing
-
-Create a `collect_trademe.sh` script and write the following content.
+Run the following commands in terminal to install the self-hosted jobs.
 
 ```bash
-#!/bin/bash
-cd $BASE_DIR
-source .venv/bin/activate
-# necessary because environment variables aren't guaranteed to be defined before called.
-export NEON_DB="$NEON_DB"
-export PYTHONPATH=$PYTHONPATH:$BASE_DIR
-python properties/get_trademe_listing.py > log.txt 2>&1
-```
-
-Run the following command.
-
-```bash
-chmod +x $base_dir/colelct_trademe.sh
-crontab -e
-```
-
-`crontab` config file will be open. Append the following content to the end of the file and save.
-
-```bash
-0 16 * * 1-5 $base_dir/crawler_colelct_trademe.sh  # Work days 16:00
-```
-
-#### School information
-
-Create a `collect_schools.sh` script and write the following content.
-
-```bash
-#!/bin/bash
-cd $BASE_DIR
-source .venv/bin/activate
-# necessary because environment variables aren't guaranteed to be defined before called.
-export NEON_DB="$NEON_DB"
-export PYTHONPATH=$PYTHONPATH:$BASE_DIR
-python schools/get_school_meta.py > log.txt 2>&1
-```
-
-Run the following command.
-
-```bash
-chmod +x $base_dir/collect_schools.sh
-crontab -e
-```
-
-`crontab` config file will be open. Append the following content to the end of the file and save.
-
-```bash
-0 0 1 * * $base_dir/collect_schools.sh  # 1st of each month 0:00
+chmod -R 755 scheduled_jobs/
+./scheduled_jobs/install_collect_schools.sh
+./scheduled_jobs/install_collect_trademe.sh
 ```
 
 
