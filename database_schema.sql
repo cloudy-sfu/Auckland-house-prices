@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict qAxf5ghcGRJicHRyNwGx7BN1FXdjgGu8SKQQdxG7eijUJcaOceyhxYao4NsDIkc
+\restrict DKkQgRkthU2EVJYYD48bgRMcIAxhp3ZeUiTeuux51gXXFeDKcq1Z3OH1yhfFva1
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -179,14 +179,10 @@ COMMENT ON COLUMN public.fuel_stations.geo_hash IS 'Geometry hash code of quadtr
 
 CREATE TABLE public.internet_availability (
     tlc integer NOT NULL,
-    unit character varying(16),
-    street_number character varying(16),
-    street_name character varying(32),
-    road_type character varying(8),
-    suburb character varying(32),
     service_name character varying(8),
     max_speed smallint,
-    aid character varying(11)
+    aid character varying(16),
+    address jsonb
 );
 
 
@@ -660,5 +656,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict qAxf5ghcGRJicHRyNwGx7BN1FXdjgGu8SKQQdxG7eijUJcaOceyhxYao4NsDIkc
+\unrestrict DKkQgRkthU2EVJYYD48bgRMcIAxhp3ZeUiTeuux51gXXFeDKcq1Z3OH1yhfFva1
 

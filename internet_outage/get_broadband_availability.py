@@ -123,7 +123,8 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         valve_2 = rate_limit(response.headers)
         response_json = response.json()
         tlc = response_json['references']['tlc']
-        structured_address = response_json['structuredAddress']
+        structured_address_raw = response_json['structuredAddress']
+        assert isinstance(structured_address_raw, dict)
     except Exception as e:
         logging.warning(f"Fail to parse address and service ID of \"{address}\". "
                         f"{type(e).__name__}: {e}")
@@ -174,13 +175,16 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
                         f"{type(e).__name__}: {e}")
         service_name = pd.NA
         max_speed = pd.NA
+    structured_address = {
+        "unit": structured_address_raw.get('unit'),
+        "street_number": structured_address_raw.get('streetNumber'),
+        "street_name": structured_address_raw.get('streetName'),
+        "road_type": structured_address_raw.get('roadType'),
+        "suburb": structured_address_raw.get('suburb'),
+    }
     records.append({
         "tlc": tlc,
-        "unit": structured_address.get('unit'),
-        "street_number": structured_address.get('streetNumber'),
-        "street_name": structured_address.get('streetName'),
-        "road_type": structured_address.get('roadType'),
-        "suburb": structured_address.get('suburb'),
+        "address": structured_address,
         "service_name": service_name,
         "max_speed": max_speed,
         "aid": aid,
