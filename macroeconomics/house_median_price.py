@@ -13,9 +13,8 @@ all_data = get_chart_data(chart_id)
 ocr_idx = get_series_idx(series_names, r"^Auckland$")
 ocr = list_to_df(all_data[ocr_idx], 'month')
 engine = create_engine(os.environ['NEON_DB'])
-with engine.begin() as c:
-    insert_if_not_exists(
-        engine, ocr,
-        ["year", "month"],
-        "macroeconomics_house_median_price"
-    )
+insert_if_not_exists(
+    engine, ocr,
+    ["year", "month"],
+    "macroeconomics_house_median_price"
+)

@@ -13,9 +13,8 @@ all_data = get_chart_data(chart_id)
 ocr_idx = get_series_idx(series_names, r"^NZ Official")
 ocr = list_to_df(all_data[ocr_idx], 'day')
 engine = create_engine(os.environ['NEON_DB'])
-with engine.begin() as c:
-    insert_if_not_exists(
-        engine, ocr,
-        ["date"],
-        "macroeconomics_ocr"
-    )
+insert_if_not_exists(
+    engine, ocr,
+    ["date"],
+    "macroeconomics_ocr"
+)

@@ -28,9 +28,8 @@ for col_name, series_idx in series_renamer.items():
 mortgage = pd.concat(mortgage, axis=1)
 mortgage.reset_index(inplace=True)
 engine = create_engine(os.environ['NEON_DB'])
-with engine.begin() as c:
-    upsert_dataframe(  # upsert because there are multiple time series
-        engine, mortgage,
-        ["date"],
-        "macroeconomics_mortgage_rate"
-    )
+upsert_dataframe(  # upsert because there are multiple time series
+    engine, mortgage,
+    ["date"],
+    "macroeconomics_mortgage_rate"
+)
