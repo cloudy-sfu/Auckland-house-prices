@@ -1,8 +1,8 @@
-name: Collect Internet outage - Chorus
+name: Collect Internet availability - Chorus
 
 on:
   schedule:
-    - cron: '0 10 * * *'
+    - cron: '0 0 * * 2-6'  # 0:00 UTC (12:00/13:00 NZ) after trademe properties collected day.
   workflow_dispatch:
 
 jobs:
@@ -29,4 +29,4 @@ jobs:
 
       - name: Run the script
         run: |
-          python internet_outage/get_chorus_outage.py
+          python internet_outage/get_broadband_availability.py

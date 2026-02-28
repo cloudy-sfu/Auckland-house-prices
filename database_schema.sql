@@ -2,9 +2,9 @@
 -- PostgreSQL database dump
 --
 
-\restrict fTT989gqChLJ4VSEw33CHg39v9kJdqL3e3YcccuyiFDf3ZNSqd55KMLdhy25xQn
+\restrict m1O9qUWeNYPJpFc4GVPEPgPxfI3Vb3rKlbXE3gmEO8URYXPovgof0g2bmahhhdH
 
--- Dumped from database version 17.7 (bdd1736)
+-- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
 
 SET statement_timeout = 0;
@@ -287,6 +287,26 @@ COMMENT ON COLUMN public.macroeconomics_ocr.date IS 'Announced date';
 
 
 --
+-- Name: properties_state_houses_new_dev; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.properties_state_houses_new_dev (
+    info_marker_id integer NOT NULL,
+    local_board character varying(64),
+    address character varying(256),
+    updated_time character varying(32),
+    land_area integer,
+    build_type character varying(256),
+    number_of_homes character varying(64),
+    parking_space character varying(32),
+    progress character varying(32),
+    planned_completion character varying(32),
+    location jsonb,
+    step character varying(32)
+);
+
+
+--
 -- Name: properties_trademe; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -320,17 +340,96 @@ COMMENT ON COLUMN public.properties_trademe.task_id IS 'The record is retrieved 
 
 
 --
--- Name: schools_equity_index; Type: TABLE; Schema: public; Owner: -
+-- Name: properties_trademe_broadband; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.schools_equity_index (
-    school_number smallint NOT NULL,
-    school_name character varying(96),
-    value_2023 smallint,
-    value_2024 smallint,
-    value_2025 smallint,
-    value_2026 smallint
+CREATE TABLE public.properties_trademe_broadband (
+    listing_id character varying(16) NOT NULL,
+    unit character varying(8),
+    street_name character varying(32),
+    street_symbol character varying(8),
+    suburb character varying(32),
+    tlc integer,
+    service_name character varying(16),
+    max_speed smallint
 );
+
+
+--
+-- Name: schools; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.schools (
+    school_number smallint NOT NULL,
+    school_name character varying(128),
+    street character varying(64),
+    suburb character varying(32),
+    city character varying(32),
+    school_type character varying(64),
+    gender character varying(8),
+    enrollment_scheme boolean,
+    latitude double precision,
+    longitude double precision,
+    students_total smallint,
+    students_european smallint,
+    students_maori smallint,
+    students_pacific smallint,
+    students_asian smallint,
+    students_melaa smallint,
+    students_others smallint,
+    students_international smallint,
+    boarding_facilities boolean,
+    year_from smallint,
+    year_to smallint,
+    is_public boolean,
+    eqi smallint,
+    lang_eng boolean,
+    lang_maori boolean,
+    lang_pacific boolean,
+    open_date date
+);
+
+
+--
+-- Name: TABLE schools; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.schools IS 'https://www.educationcounts.govt.nz/directories/list-of-nz-schools';
+
+
+--
+-- Name: COLUMN schools.enrollment_scheme; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.schools.enrollment_scheme IS 'If True, students in the zone are guaranteed admitted; others can apply.';
+
+
+--
+-- Name: COLUMN schools.students_melaa; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.schools.students_melaa IS 'Middle Eastern, Latin American, African';
+
+
+--
+-- Name: COLUMN schools.lang_eng; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.schools.lang_eng IS 'Some students are taught in English.';
+
+
+--
+-- Name: COLUMN schools.lang_maori; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.schools.lang_maori IS 'Some students are taught in Maori.';
+
+
+--
+-- Name: COLUMN schools.lang_pacific; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.schools.lang_pacific IS 'Some students are tanght in Pacific language.';
 
 
 --
@@ -433,11 +532,27 @@ ALTER TABLE ONLY public.properties_trademe
 
 
 --
--- Name: schools_equity_index schools_equity_index_pk; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: properties_state_houses_new_dev properties_state_houses_new_dev_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.schools_equity_index
-    ADD CONSTRAINT schools_equity_index_pk PRIMARY KEY (school_number);
+ALTER TABLE ONLY public.properties_state_houses_new_dev
+    ADD CONSTRAINT properties_state_houses_new_dev_pk PRIMARY KEY (info_marker_id);
+
+
+--
+-- Name: properties_trademe_broadband properties_trademe_broadband_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_trademe_broadband
+    ADD CONSTRAINT properties_trademe_broadband_pk PRIMARY KEY (listing_id);
+
+
+--
+-- Name: schools schools_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.schools
+    ADD CONSTRAINT schools_pk PRIMARY KEY (school_number);
 
 
 --
@@ -468,5 +583,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict fTT989gqChLJ4VSEw33CHg39v9kJdqL3e3YcccuyiFDf3ZNSqd55KMLdhy25xQn
+\unrestrict m1O9qUWeNYPJpFc4GVPEPgPxfI3Vb3rKlbXE3gmEO8URYXPovgof0g2bmahhhdH
 

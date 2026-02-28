@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, text
 
 logging.basicConfig(
     level=logging.INFO,
-    format="[%(asctime)s] [%(levelname)s] %(message)s",
+    format="[%(levelname)s] %(message)s",
     datefmt='%Y-%m-%d %H:%M:%S',
     stream=sys.stdout,
 )
