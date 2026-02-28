@@ -10,6 +10,7 @@ from math import ceil
 from requests import Session
 import pandas as pd
 from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 
 from postgresql_upsert import upsert_dataframe
 from tqdm import tqdm
@@ -23,7 +24,7 @@ logging.basicConfig(
 )
 script_start_time = pd.Timestamp('now', tz='UTC')
 session = Session()
-engine = create_engine(os.environ['NEON_DB'])
+engine = create_engine(os.environ['NEON_DB'], poolclass=NullPool)
 
 
 def rate_limit(header_):
@@ -116,24 +117,11 @@ for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
             last_loop_flag = True
         response_json = response.json()
         tlc = response_json['references']['tlc']
-
-        # Structured address
-        structured_address_raw = response_json['structuredAddress']
-        unit = structured_address_raw['unit']
-        street_number = structured_address_raw['streetNumber']
-        street_name = structured_address_raw['streetName']
-        street_symbol = structured_address_raw['roadType']
-        suburb = structured_address_raw['suburb']
     except Exception as e:
         logging.warning(f"Fail to parse address and service ID of \"{address}\". "
                         f"{type(e).__name__}: {e}")
         records.append({
             "listing_id": row['listing_id'],
-            "unit": pd.NA,
-            "street_number": pd.NA,
-            "street_name": pd.NA,
-            "street_symbol": pd.NA,
-            "suburb": pd.NA,
             "tlc": pd.NA,
             "service_name": pd.NA,
             "max_speed": pd.NA,
@@ -177,11 +165,6 @@ for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
                         f"{type(e).__name__}: {e}")
         records.append({
             "listing_id": row['listing_id'],
-            "unit": unit,
-            "street_number": street_number,
-            "street_name": street_name,
-            "street_symbol": street_symbol,
-            "suburb": suburb,
             "tlc": tlc,
             "service_name": pd.NA,
             "max_speed": pd.NA,
@@ -189,11 +172,6 @@ for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
     else:
         records.append({
             "listing_id": row['listing_id'],
-            "unit": unit,
-            "street_number": street_number,
-            "street_name": street_name,
-            "street_symbol": street_symbol,
-            "suburb": suburb,
             "tlc": tlc,
             "service_name": service_name,
             "max_speed": max_speed,
