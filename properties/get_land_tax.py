@@ -79,6 +79,7 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         )
         trademe_land_link.clear()
         records_df = pd.DataFrame(records)
+        records_df.drop_duplicates(subset=['land_id'], inplace=True)
         logging.info(f"Queued {records_df.shape[0]} records of land tax, uploading to "
                      f"database.")
         upsert_dataframe(
@@ -158,6 +159,7 @@ upsert_dataframe(
 )
 trademe_land_link.clear()
 records_df = pd.DataFrame(records)
+records_df.drop_duplicates(subset=['land_id'], inplace=True)
 logging.info(f"Queued {records_df.shape[0]} records of land tax, uploading to "
              f"database.")
 upsert_dataframe(

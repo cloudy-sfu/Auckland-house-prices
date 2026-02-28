@@ -71,6 +71,7 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
     # %% Check conditions to quit loop.
     if i % 500 == 0:
         records_df = pd.DataFrame(records)
+        records_df.drop_duplicates(subset=['tlc'], inplace=True)
         logging.info(f"Queued {records_df.shape[0]} records of broadband availability, "
                      f"uploading to database.")
         upsert_dataframe(
@@ -191,6 +192,7 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
     })
 
 records_df = pd.DataFrame(records)
+records_df.drop_duplicates(subset=['tlc'], inplace=True)
 logging.info(f"Queued {records_df.shape[0]} records of broadband availability, "
              f"uploading to database.")
 upsert_dataframe(
