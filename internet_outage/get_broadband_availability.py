@@ -63,24 +63,36 @@ with engine.connect() as c:
 
 # %% Main loop.
 records = []
-last_loop_flag = False
-for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
+trademe_chorus_link = []
+valve_1 = valve_2 = valve_3 = True
+for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
     address = row['address']
 
     # %% Check conditions to quit loop.
-    if len(records) >= 500:
+    if i % 500 == 0:
         records_df = pd.DataFrame(records)
-        logging.info(f"Queued {records_df.shape[0]} records, uploading to database.")
+        logging.info(f"Queued {records_df.shape[0]} records of broadband availability, "
+                     f"uploading to database.")
         upsert_dataframe(
             engine,
             records_df,
-            ["listing_id"],
-            "properties_trademe_broadband"
+            ["tlc"],
+            "internet_availability"
         )
         records.clear()
-
-    if last_loop_flag:
+        trademe_chorus_link_df = pd.DataFrame(trademe_chorus_link)
+        logging.info(f"Queued {records_df.shape[0]} records of trademe listing ID and "
+                     f"Chorus address ID pairs, uploading to database.")
+        upsert_dataframe(
+            engine,
+            trademe_chorus_link_df,
+            ["listing_id"],
+            "properties_trademe_chorus_tlc"
+        )
+    if not (valve_1 and valve_2 and valve_3):
+        logging.warning("Chorus API reaches daily limit and won't reset shortly, stop.")
         break
+
     now = pd.Timestamp('now', tz='UTC')
     if now - script_start_time > pd.Timedelta(hours=5, minutes=45):
         logging.warning("Execution time reaches 5 hours and 45 minutes, stop.")
@@ -95,14 +107,12 @@ for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         )
         response.raise_for_status()
         valve_1 = rate_limit(response.headers)
-        if not valve_1:
-            # valve 1 and valve 2 uses the same API, when valve 1 remains 0, valve 2 would
-            # fail.
-            logging.warning("Chorus API reaches daily rate limit in stage 1, stop.")
-            break
         response_json = response.json()
         assert response_json['results'], "Chorus cannot find AID of this address."
         aid = response_json['results'][0]['aid']
+        if not valve_1:
+            # the next step will use the same API again, so quit when reached the limit
+            continue
 
         # %% Get "tlc".
         response = session.get(
@@ -111,22 +121,22 @@ for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         )
         response.raise_for_status()
         valve_2 = rate_limit(response.headers)
-        if not valve_2:
-            logging.warning("Chorus API reaches daily rate limit in stage 2, stop after "
-                            "the current loop.")
-            last_loop_flag = True
         response_json = response.json()
         tlc = response_json['references']['tlc']
+        structured_address = response_json['structuredAddress']
     except Exception as e:
         logging.warning(f"Fail to parse address and service ID of \"{address}\". "
                         f"{type(e).__name__}: {e}")
-        records.append({
+        trademe_chorus_link.append({
             "listing_id": row['listing_id'],
             "tlc": pd.NA,
-            "service_name": pd.NA,
-            "max_speed": pd.NA,
         })
         continue
+    else:
+        trademe_chorus_link.append({
+            "listing_id": row['listing_id'],
+            "tlc": tlc,
+        })
 
     try:
         # %% Get available service.
@@ -144,44 +154,54 @@ for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
             headers=header_availability_1
         )
         response.raise_for_status()
-        valve_3 = int(response.headers['X-RateLimit-Remaining'])
-        if valve_3 <= 0:  # Any of valve 2 or valve 3 remaining 0 will cause stop.
-            logging.warning("Sentry API (Chorus application) reaches rate limit, stop "
-                            "after the current loop.")
-            last_loop_flag = True
+        valve_3 = int(response.headers['X-RateLimit-Remaining']) > 0
 
         # %% Parse the best available service.
         response_json = response.json()
         assert response_json['success'], \
             f"Chorus raises status code {response_json['statusCode']}."
         services = pd.DataFrame(response_json['available_services'])
-        services = services.loc[services['capable'] == 'YES', :]
-        services_b = services.iloc[services['speed_mbps'].argmax()]
-        max_speed = services_b['speed_mbps']
-        service_name = services_b['service']
-
+        if services.empty:
+            service_name = pd.NA
+            max_speed = pd.NA
+        else:
+            services = services.loc[services['capable'] == 'YES', :]
+            services_b = services.iloc[services['speed_mbps'].argmax()]
+            max_speed = services_b['speed_mbps']
+            service_name = services_b['service']
     except Exception as e:
         logging.warning(f"Fail to parse broadband availability of \"{address}\". "
                         f"{type(e).__name__}: {e}")
-        records.append({
-            "listing_id": row['listing_id'],
-            "tlc": tlc,
-            "service_name": pd.NA,
-            "max_speed": pd.NA,
-        })
-    else:
-        records.append({
-            "listing_id": row['listing_id'],
-            "tlc": tlc,
-            "service_name": service_name,
-            "max_speed": max_speed,
-        })
+        service_name = pd.NA
+        max_speed = pd.NA
+    records.append({
+        "tlc": tlc,
+        "unit": structured_address.get('unit'),
+        "street_number": structured_address.get('streetNumber'),
+        "street_name": structured_address.get('streetName'),
+        "road_type": structured_address.get('roadType'),
+        "suburb": structured_address.get('suburb'),
+        "service_name": service_name,
+        "max_speed": max_speed,
+        "aid": aid,
+    })
 
 records_df = pd.DataFrame(records)
-logging.info(f"Queued {records_df.shape[0]} records, uploading to database.")
+logging.info(f"Queued {records_df.shape[0]} records of broadband availability, "
+             f"uploading to database.")
 upsert_dataframe(
     engine,
     records_df,
+    ["tlc"],
+    "internet_availability"
+)
+records.clear()
+trademe_chorus_link_df = pd.DataFrame(trademe_chorus_link)
+logging.info(f"Queued {records_df.shape[0]} records of trademe listing ID and "
+             f"Chorus address ID pairs, uploading to database.")
+upsert_dataframe(
+    engine,
+    trademe_chorus_link_df,
     ["listing_id"],
-    "properties_trademe_broadband"
+    "properties_trademe_chorus_tlc"
 )

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Z6blhQ2TlsxUHCmc0GWK3Stfm8tHpk0cwVRfr0q8Afw8Ds7G3wfXAqAe6Qgyyjn
+\restrict ZtRQZueGKv5VBplFut6ePKoigdRuhufjfOLMqGICsz3le4uDf5axtQTPP8elpxv
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -171,6 +171,23 @@ COMMENT ON COLUMN public.fuel_stations.name IS 'Name of the fuel station.';
 --
 
 COMMENT ON COLUMN public.fuel_stations.geo_hash IS 'Geometry hash code of quadtree, which is used by "gaspy" to search fuel stations.';
+
+
+--
+-- Name: internet_availability; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.internet_availability (
+    tlc integer NOT NULL,
+    unit character varying(16),
+    street_number character varying(16),
+    street_name character varying(32),
+    road_type character varying(8),
+    suburb character varying(32),
+    service_name character varying(8),
+    max_speed smallint,
+    aid character varying(11)
+);
 
 
 --
@@ -365,14 +382,12 @@ COMMENT ON COLUMN public.properties_trademe.task_id IS 'The record is retrieved 
 
 
 --
--- Name: properties_trademe_broadband; Type: TABLE; Schema: public; Owner: -
+-- Name: properties_trademe_chorus_tlc; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.properties_trademe_broadband (
+CREATE TABLE public.properties_trademe_chorus_tlc (
     listing_id character varying(16) NOT NULL,
-    tlc integer,
-    service_name character varying(16),
-    max_speed smallint
+    tlc integer
 );
 
 
@@ -506,6 +521,14 @@ ALTER TABLE ONLY public.fuel_prices
 
 
 --
+-- Name: internet_availability internet_availability_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.internet_availability
+    ADD CONSTRAINT internet_availability_pk PRIMARY KEY (tlc);
+
+
+--
 -- Name: macroeconomics_cpi_all macroeconomics_cpi_all_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -586,11 +609,11 @@ ALTER TABLE ONLY public.properties_state_houses_new_dev
 
 
 --
--- Name: properties_trademe_broadband properties_trademe_broadband_pk; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: properties_trademe_chorus_tlc properties_trademe_chorus_tlc_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.properties_trademe_broadband
-    ADD CONSTRAINT properties_trademe_broadband_pk PRIMARY KEY (listing_id);
+ALTER TABLE ONLY public.properties_trademe_chorus_tlc
+    ADD CONSTRAINT properties_trademe_chorus_tlc_pk PRIMARY KEY (listing_id);
 
 
 --
@@ -626,14 +649,6 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 
 
 --
--- Name: properties_trademe_broadband properties_trademe_broadband_properties_trademe_listing_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_trademe_broadband
-    ADD CONSTRAINT properties_trademe_broadband_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id);
-
-
---
 -- Name: properties_trademe task_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -645,5 +660,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Z6blhQ2TlsxUHCmc0GWK3Stfm8tHpk0cwVRfr0q8Afw8Ds7G3wfXAqAe6Qgyyjn
+\unrestrict ZtRQZueGKv5VBplFut6ePKoigdRuhufjfOLMqGICsz3le4uDf5axtQTPP8elpxv
 
