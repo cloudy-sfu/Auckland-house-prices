@@ -60,114 +60,16 @@ with open("internet_outage/missing_broadband_availability_trademe.sql") as f:
 with engine.connect() as c:
     listings = pd.read_sql(sql_listings, c)
 
-# %% Collect data.
+# %% Main loop.
 records = []
 last_loop_flag = False
 for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
     address = row['address']
 
-    try:
-        # %% Get "aid".
-        response = session.get(
-            "https://api.chorus.co.nz/addresslookup/v1/addresses",
-            params={"fuzzy": "true", "q": address},
-            headers=header_address,
-        )
-        response.raise_for_status()
-        response_json = response.json()
-        aid = response_json['results'][0]['aid']
-        valve_1 = rate_limit(response.headers)
-        if not valve_1:
-            # valve 1 and valve 2 uses the same API, when valve 1 remains 0, valve 2 would
-            # fail.
-            logging.warning("Chorus API reaches daily rate limit in stage 1, stop.")
-            break
-
-        # %% Get "tlc".
-        response = session.get(
-            f"https://api.chorus.co.nz/addresslookup/v1/addresses/aid:{aid}",
-            headers=header_address,
-        )
-        response.raise_for_status()
-        response_json = response.json()
-        tlc = response_json['references']['tlc']
-
-        # Structured address
-        structured_address_raw = response_json['structuredAddress']
-        unit = structured_address_raw['unit']
-        street_number = structured_address_raw['streetNumber']
-        street_name = structured_address_raw['streetName']
-        street_symbol = structured_address_raw['roadType']
-        suburb = structured_address_raw['suburb']
-
-        valve_2 = rate_limit(response.headers)
-        if not valve_2:
-            logging.warning("Chorus API reaches daily rate limit in stage 2, stop after "
-                            "the current loop.")
-            last_loop_flag = True
-
-        # %% Get available service.
-        sentry_trace_id = uuid.uuid4().hex
-        sentry_span_id = secrets.token_hex(8)
-        baggage = (f"sentry-environment=production,sentry-release=public-website-frontend%40"
-                   f"2.1.40,sentry-public_key=6d1e0cc8e0964ad2a39a4ced25ee0b3c,"
-                   f"sentry-trace_id={sentry_trace_id}")
-        header_availability_1 = header_availability.copy()
-        header_availability_1['baggage'] = baggage
-        header_availability_1['sentry-trace'] = f"{sentry_trace_id}-{sentry_span_id}"
-
-        response = session.get(
-            f"https://www.chorus.co.nz/api/bbc/bcc/{tlc}",
-            headers=header_availability_1
-        )
-        response.raise_for_status()
-        response_json = response.json()
-        valve_3 = int(response.headers['X-RateLimit-Remaining'])
-        if valve_3 <= 0:  # Any of valve 2 or valve 3 remaining 0 will cause stop.
-            logging.warning("Sentry API (Chorus application) reaches rate limit, stop after "
-                            "the current loop.")
-            last_loop_flag = True
-
-        # %% Parse the best available service.
-        if response_json['success']:
-            services = pd.DataFrame(response_json['available_services'])
-            services = services.loc[services['capable'] == 'YES', :]
-            services_b = services.iloc[services['speed_mbps'].argmax()]
-            max_speed = services_b['speed_mbps']
-            service_name = services_b['service']
-            records.append({
-                "listing_id": row['listing_id'],
-                "unit": unit,
-                "street_number": street_number,
-                "street_name": street_name,
-                "street_symbol": street_symbol,
-                "suburb": suburb,
-                "tlc": tlc,
-                "service_name": service_name,
-                "max_speed": max_speed,
-            })
-        else:
-            logging.warning(f"Chorus cannot find address \"{address}\", status code "
-                            f"{response_json['statusCode']}.")
-            records.append({
-                "listing_id": row['listing_id'],
-                "unit": unit,
-                "street_number": street_number,
-                "street_name": street_name,
-                "street_symbol": street_symbol,
-                "suburb": suburb,
-                "tlc": tlc,
-                "service_name": pd.NA,
-                "max_speed": pd.NA,
-            })
-
-    except Exception as e:
-        logging.warning(f"Fail to collect data of address \"{address}\", continue. "
-                        f"{type(e).__name__}: {e}")
-        continue
-
+    # %% Check conditions to quit loop.
     if len(records) >= 500:
         records_df = pd.DataFrame(records)
+        logging.info(f"Queued {records_df.shape[0]} records, uploading to database.")
         upsert_dataframe(
             engine,
             records_df,
@@ -183,8 +85,122 @@ for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         logging.warning("Execution time reaches 5 hours and 45 minutes, stop.")
         break
 
+    try:
+        # %% Get "aid".
+        response = session.get(
+            "https://api.chorus.co.nz/addresslookup/v1/addresses",
+            params={"fuzzy": "true", "q": address},
+            headers=header_address,
+        )
+        response.raise_for_status()
+        valve_1 = rate_limit(response.headers)
+        if not valve_1:
+            # valve 1 and valve 2 uses the same API, when valve 1 remains 0, valve 2 would
+            # fail.
+            logging.warning("Chorus API reaches daily rate limit in stage 1, stop.")
+            break
+        response_json = response.json()
+        assert response_json['results'], "Chorus cannot find AID of this address."
+        aid = response_json['results'][0]['aid']
+
+        # %% Get "tlc".
+        response = session.get(
+            f"https://api.chorus.co.nz/addresslookup/v1/addresses/aid:{aid}",
+            headers=header_address,
+        )
+        response.raise_for_status()
+        valve_2 = rate_limit(response.headers)
+        if not valve_2:
+            logging.warning("Chorus API reaches daily rate limit in stage 2, stop after "
+                            "the current loop.")
+            last_loop_flag = True
+        response_json = response.json()
+        tlc = response_json['references']['tlc']
+
+        # Structured address
+        structured_address_raw = response_json['structuredAddress']
+        unit = structured_address_raw['unit']
+        street_number = structured_address_raw['streetNumber']
+        street_name = structured_address_raw['streetName']
+        street_symbol = structured_address_raw['roadType']
+        suburb = structured_address_raw['suburb']
+    except Exception as e:
+        logging.warning(f"Fail to parse address and service ID of \"{address}\". "
+                        f"{type(e).__name__}: {e}")
+        records.append({
+            "listing_id": row['listing_id'],
+            "unit": pd.NA,
+            "street_number": pd.NA,
+            "street_name": pd.NA,
+            "street_symbol": pd.NA,
+            "suburb": pd.NA,
+            "tlc": pd.NA,
+            "service_name": pd.NA,
+            "max_speed": pd.NA,
+        })
+        continue
+
+    try:
+        # %% Get available service.
+        sentry_trace_id = uuid.uuid4().hex
+        sentry_span_id = secrets.token_hex(8)
+        baggage = (f"sentry-environment=production,sentry-release=public-website-frontend"
+                   f"%402.1.40,sentry-public_key=6d1e0cc8e0964ad2a39a4ced25ee0b3c,"
+                   f"sentry-trace_id={sentry_trace_id}")
+        header_availability_1 = header_availability.copy()
+        header_availability_1['baggage'] = baggage
+        header_availability_1['sentry-trace'] = f"{sentry_trace_id}-{sentry_span_id}"
+
+        response = session.get(
+            f"https://www.chorus.co.nz/api/bbc/bcc/{tlc}",
+            headers=header_availability_1
+        )
+        response.raise_for_status()
+        valve_3 = int(response.headers['X-RateLimit-Remaining'])
+        if valve_3 <= 0:  # Any of valve 2 or valve 3 remaining 0 will cause stop.
+            logging.warning("Sentry API (Chorus application) reaches rate limit, stop "
+                            "after the current loop.")
+            last_loop_flag = True
+
+        # %% Parse the best available service.
+        response_json = response.json()
+        assert response_json['success'], \
+            f"Chorus raises status code {response_json['statusCode']}."
+        services = pd.DataFrame(response_json['available_services'])
+        services = services.loc[services['capable'] == 'YES', :]
+        services_b = services.iloc[services['speed_mbps'].argmax()]
+        max_speed = services_b['speed_mbps']
+        service_name = services_b['service']
+
+    except Exception as e:
+        logging.warning(f"Fail to parse broadband availability of \"{address}\". "
+                        f"{type(e).__name__}: {e}")
+        records.append({
+            "listing_id": row['listing_id'],
+            "unit": unit,
+            "street_number": street_number,
+            "street_name": street_name,
+            "street_symbol": street_symbol,
+            "suburb": suburb,
+            "tlc": tlc,
+            "service_name": pd.NA,
+            "max_speed": pd.NA,
+        })
+    else:
+        records.append({
+            "listing_id": row['listing_id'],
+            "unit": unit,
+            "street_number": street_number,
+            "street_name": street_name,
+            "street_symbol": street_symbol,
+            "suburb": suburb,
+            "tlc": tlc,
+            "service_name": service_name,
+            "max_speed": max_speed,
+        })
 
 records_df = pd.DataFrame(records)
+logging.info(f"Queued {records_df.shape[0]} records, uploading to database.")
 upsert_dataframe(
     engine,
     records_df,
