@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict DKkQgRkthU2EVJYYD48bgRMcIAxhp3ZeUiTeuux51gXXFeDKcq1Z3OH1yhfFva1
+\restrict t0oraPP5hSYoThTVNXmhvfI8y0oMPSQcXCa30haOfH3m5dwCl4FNcS9y9uukAL2
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -313,7 +313,8 @@ CREATE TABLE public.properties_land_tax (
     land_tax double precision,
     land_usage character varying(64),
     land_tax_break_down jsonb,
-    address character varying(128)
+    nztm2000_x double precision,
+    nztm2000_y double precision
 );
 
 
@@ -656,5 +657,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict DKkQgRkthU2EVJYYD48bgRMcIAxhp3ZeUiTeuux51gXXFeDKcq1Z3OH1yhfFva1
+\unrestrict t0oraPP5hSYoThTVNXmhvfI8y0oMPSQcXCa30haOfH3m5dwCl4FNcS9y9uukAL2
 
