@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ZtRQZueGKv5VBplFut6ePKoigdRuhufjfOLMqGICsz3le4uDf5axtQTPP8elpxv
+\restrict TFGo7JzuoXjcOUTSoChnqR1hgYF11N7BeQFa8drcouXcoLgv1BC6hNlh4SAFDEu
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -308,7 +308,7 @@ COMMENT ON COLUMN public.macroeconomics_ocr.date IS 'Announced date';
 --
 
 CREATE TABLE public.properties_land_tax (
-    land_id character varying(11) NOT NULL,
+    land_id character varying(16) NOT NULL,
     land_area integer,
     floor_area integer,
     building_coverage_area integer,
@@ -397,7 +397,7 @@ CREATE TABLE public.properties_trademe_chorus_tlc (
 
 CREATE TABLE public.properties_trademe_land_rate_account_key (
     listing_id character varying(9) NOT NULL,
-    land_id character varying(11)
+    land_id character varying(16)
 );
 
 
@@ -660,5 +660,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ZtRQZueGKv5VBplFut6ePKoigdRuhufjfOLMqGICsz3le4uDf5axtQTPP8elpxv
+\unrestrict TFGo7JzuoXjcOUTSoChnqR1hgYF11N7BeQFa8drcouXcoLgv1BC6hNlh4SAFDEu
 
