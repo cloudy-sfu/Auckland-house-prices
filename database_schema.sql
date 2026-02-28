@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict m1O9qUWeNYPJpFc4GVPEPgPxfI3Vb3rKlbXE3gmEO8URYXPovgof0g2bmahhhdH
+\restrict kodxkpIhncgRAB8FCELklhXCmX6g05bbwjm6MCAWU3dY5dq1CHoxsu37COHsziW
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -345,13 +345,27 @@ COMMENT ON COLUMN public.properties_trademe.task_id IS 'The record is retrieved 
 
 CREATE TABLE public.properties_trademe_broadband (
     listing_id character varying(16) NOT NULL,
-    unit character varying(8),
-    street_name character varying(32),
-    street_symbol character varying(8),
-    suburb character varying(32),
     tlc integer,
     service_name character varying(16),
     max_speed smallint
+);
+
+
+--
+-- Name: properties_trademe_land_tax; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.properties_trademe_land_tax (
+    listing_id character varying(9) NOT NULL,
+    land_id character varying(11),
+    land_area integer,
+    floor_area integer,
+    building_coverage_area integer,
+    land_value integer,
+    improvements_value integer,
+    land_tax double precision,
+    land_usage character varying(64),
+    land_tax_break_down jsonb
 );
 
 
@@ -548,6 +562,14 @@ ALTER TABLE ONLY public.properties_trademe_broadband
 
 
 --
+-- Name: properties_trademe_land_tax properties_trademe_land_tax_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_trademe_land_tax
+    ADD CONSTRAINT properties_trademe_land_tax_pk PRIMARY KEY (listing_id);
+
+
+--
 -- Name: schools schools_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -572,6 +594,22 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 
 
 --
+-- Name: properties_trademe_broadband properties_trademe_broadband_properties_trademe_listing_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_trademe_broadband
+    ADD CONSTRAINT properties_trademe_broadband_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id);
+
+
+--
+-- Name: properties_trademe_land_tax properties_trademe_land_tax_properties_trademe_listing_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_trademe_land_tax
+    ADD CONSTRAINT properties_trademe_land_tax_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id);
+
+
+--
 -- Name: properties_trademe task_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -583,5 +621,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict m1O9qUWeNYPJpFc4GVPEPgPxfI3Vb3rKlbXE3gmEO8URYXPovgof0g2bmahhhdH
+\unrestrict kodxkpIhncgRAB8FCELklhXCmX6g05bbwjm6MCAWU3dY5dq1CHoxsu37COHsziW
 

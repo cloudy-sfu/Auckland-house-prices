@@ -7,13 +7,13 @@ import time
 import uuid
 from math import ceil
 
-from requests import Session
 import pandas as pd
+from requests import Session
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
+from tqdm import tqdm
 
 from postgresql_upsert import upsert_dataframe
-from tqdm import tqdm
 
 # %% Initialization.
 logging.basicConfig(
