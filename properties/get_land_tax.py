@@ -60,25 +60,35 @@ with engine.connect() as c:
     listings = pd.read_sql(sql_listings, c)
 
 # %% Main loop.
+trademe_land_link = []
 records = []
-last_loop_flag = False
-for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
+for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
     address = row['address']
 
     # %% Check conditions to quit loop.
-    if len(records) >= 500:
+    if i % 500 == 0:
+        trademe_land_link_df = pd.DataFrame(trademe_land_link)
+        logging.info(f"Queued {trademe_land_link_df.shape[0]} records of "
+                     f"trademe listing ID and Auckland Council rate account key pairs, "
+                     f"uploading to database.")
+        upsert_dataframe(
+            engine,
+            trademe_land_link_df,
+            ["listing_id"],
+            "properties_trademe_land_rate_account_key"
+        )
+        trademe_land_link.clear()
         records_df = pd.DataFrame(records)
-        logging.info(f"Queued {records_df.shape[0]} records, uploading to database.")
+        logging.info(f"Queued {records_df.shape[0]} records of land tax, uploading to "
+                     f"database.")
         upsert_dataframe(
             engine,
             records_df,
-            ["listing_id"],
-            "properties_trademe_broadband"
+            ["land_id"],
+            "properties_land_tax"
         )
         records.clear()
 
-    if last_loop_flag:
-        break
     now = pd.Timestamp('now', tz='UTC')
     if now - script_start_time > pd.Timedelta(hours=5, minutes=45):
         logging.warning("Execution time reaches 5 hours and 45 minutes, stop.")
@@ -97,19 +107,16 @@ for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
     except Exception as e:
         logging.warning(f"Cannot find rate account key of \"{address}\" in "
                         f"Auckland council. {type(e).__name__}: {e}")
-        records.append({
+        trademe_land_link.append({
             "listing_id": row['listing_id'],
             "land_id": pd.NA,
-            "land_area": pd.NA,
-            "floor_area": pd.NA,
-            "building_coverage_area": pd.NA,
-            "land_value": pd.NA,
-            "improvements_value": pd.NA,
-            "land_tax": pd.NA,
-            "land_usage": pd.NA,
-            "land_tax_break_down": pd.NA,
         })
         continue
+    else:
+        trademe_land_link.append({
+            "listing_id": row['listing_id'],
+            "land_id": land_id,
+        })
 
     try:
         # %% Get land information.
@@ -123,24 +130,12 @@ for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
     except Exception as e:
         logging.warning(f"Cannot find land information of \"{address}\" in "
                         f"Auckland council. {type(e).__name__}: {e}")
-        records.append({
-            "listing_id": row['listing_id'],
-            "land_id": land_id,
-            "land_area": pd.NA,
-            "floor_area": pd.NA,
-            "building_coverage_area": pd.NA,
-            "land_value": pd.NA,
-            "improvements_value": pd.NA,
-            "land_tax": pd.NA,
-            "land_usage": pd.NA,
-            "land_tax_break_down": pd.NA,
-        })
         continue
 
     # %% Parse land information.
     records.append({
-        "listing_id": row['listing_id'],
         "land_id": land_id,
+        "address": response_json.get('address', '')[:128],
         "land_area": get_int(response_json, 'area'),
         "floor_area": get_int(response_json, 'totalFloorArea'),
         "building_coverage_area": get_int(response_json, 'buildingSiteCoverage'),
@@ -151,11 +146,24 @@ for _, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         "land_tax_break_down": response_json.get('rateBreakdown', {}),
     })
 
+trademe_land_link_df = pd.DataFrame(trademe_land_link)
+logging.info(f"Queued {trademe_land_link_df.shape[0]} records of "
+             f"trademe listing ID and Auckland Council rate account key pairs, "
+             f"uploading to database.")
+upsert_dataframe(
+    engine,
+    trademe_land_link_df,
+    ["listing_id"],
+    "properties_trademe_land_rate_account_key"
+)
+trademe_land_link.clear()
 records_df = pd.DataFrame(records)
-logging.info(f"Queued {records_df.shape[0]} records, uploading to database.")
+logging.info(f"Queued {records_df.shape[0]} records of land tax, uploading to "
+             f"database.")
 upsert_dataframe(
     engine,
     records_df,
-    ["listing_id"],
-    "properties_trademe_land_tax"
+    ["land_id"],
+    "properties_land_tax"
 )
+records.clear()
