@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict TFGo7JzuoXjcOUTSoChnqR1hgYF11N7BeQFa8drcouXcoLgv1BC6hNlh4SAFDEu
+\restrict qAxf5ghcGRJicHRyNwGx7BN1FXdjgGu8SKQQdxG7eijUJcaOceyhxYao4NsDIkc
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -396,7 +396,7 @@ CREATE TABLE public.properties_trademe_chorus_tlc (
 --
 
 CREATE TABLE public.properties_trademe_land_rate_account_key (
-    listing_id character varying(9) NOT NULL,
+    listing_id character varying(16) NOT NULL,
     land_id character varying(16)
 );
 
@@ -660,5 +660,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict TFGo7JzuoXjcOUTSoChnqR1hgYF11N7BeQFa8drcouXcoLgv1BC6hNlh4SAFDEu
+\unrestrict qAxf5ghcGRJicHRyNwGx7BN1FXdjgGu8SKQQdxG7eijUJcaOceyhxYao4NsDIkc
 
