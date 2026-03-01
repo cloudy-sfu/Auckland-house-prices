@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict t0oraPP5hSYoThTVNXmhvfI8y0oMPSQcXCa30haOfH3m5dwCl4FNcS9y9uukAL2
+\restrict VYS8DLP7vLaAUwGQcszMxSBROC4n4RnO7JtBclt3P6tYVDaOk1hT5wRqmPSQ8IA
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -221,28 +221,6 @@ CREATE TABLE public.macroeconomics_cpi_all (
 CREATE TABLE public.macroeconomics_cpi_non_tradable (
     year smallint NOT NULL,
     quarter smallint NOT NULL,
-    value double precision
-);
-
-
---
--- Name: macroeconomics_hla_low; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.macroeconomics_hla_low (
-    year smallint NOT NULL,
-    month smallint NOT NULL,
-    value double precision
-);
-
-
---
--- Name: macroeconomics_hla_mid; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.macroeconomics_hla_mid (
-    year smallint NOT NULL,
-    month smallint NOT NULL,
     value double precision
 );
 
@@ -542,22 +520,6 @@ ALTER TABLE ONLY public.macroeconomics_cpi_non_tradable
 
 
 --
--- Name: macroeconomics_hla_low macroeconomics_hla_low_pk; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.macroeconomics_hla_low
-    ADD CONSTRAINT macroeconomics_hla_low_pk PRIMARY KEY (year, month);
-
-
---
--- Name: macroeconomics_hla_mid macroeconomics_hla_mid_pk; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.macroeconomics_hla_mid
-    ADD CONSTRAINT macroeconomics_hla_mid_pk PRIMARY KEY (year, month);
-
-
---
 -- Name: macroeconomics_house_median_price macroeconomics_house_median_price_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -646,16 +608,48 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 
 
 --
+-- Name: properties_trademe_land_rate_account_key land_rate_account_key_properties_land_tax_land_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_trademe_land_rate_account_key
+    ADD CONSTRAINT land_rate_account_key_properties_land_tax_land_id_fk FOREIGN KEY (land_id) REFERENCES public.properties_land_tax(land_id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: properties_trademe_land_rate_account_key land_rate_account_key_properties_trademe_listing_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_trademe_land_rate_account_key
+    ADD CONSTRAINT land_rate_account_key_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: properties_trademe_chorus_tlc properties_trademe_chorus_tlc_internet_availability_tlc_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_trademe_chorus_tlc
+    ADD CONSTRAINT properties_trademe_chorus_tlc_internet_availability_tlc_fk FOREIGN KEY (tlc) REFERENCES public.internet_availability(tlc) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: properties_trademe_chorus_tlc properties_trademe_chorus_tlc_properties_trademe_listing_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_trademe_chorus_tlc
+    ADD CONSTRAINT properties_trademe_chorus_tlc_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: properties_trademe task_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.properties_trademe
-    ADD CONSTRAINT task_id FOREIGN KEY (task_id) REFERENCES public.crawler_collect_trademe(id);
+    ADD CONSTRAINT task_id FOREIGN KEY (task_id) REFERENCES public.crawler_collect_trademe(id) ON UPDATE SET NULL ON DELETE SET NULL;
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict t0oraPP5hSYoThTVNXmhvfI8y0oMPSQcXCa30haOfH3m5dwCl4FNcS9y9uukAL2
+\unrestrict VYS8DLP7vLaAUwGQcszMxSBROC4n4RnO7JtBclt3P6tYVDaOk1hT5wRqmPSQ8IA
 
