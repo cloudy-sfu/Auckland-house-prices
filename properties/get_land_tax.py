@@ -144,8 +144,8 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         "land_tax": get_float(response_json, 'totalRatesInclCip'),
         "land_usage": response_json.get('landUseDescription', '')[:64],
         "land_tax_break_down": response_json.get('rateBreakdown', {}),
-        "nztm2000_x": response_json.get('x'),
-        "nztm2000_y": response_json.get('y'),
+        "nztm2000_x": get_float(response_json, 'x'),
+        "nztm2000_y": get_float(response_json, 'y'),
     })
 
 trademe_land_link_df = pd.DataFrame(trademe_land_link)
