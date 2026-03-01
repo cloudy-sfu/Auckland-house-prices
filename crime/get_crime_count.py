@@ -77,6 +77,7 @@ def get_crimes(suburb_id, start_year, start_month, end_year, end_month):
         values='count'
     )
     records_monthly.fillna(0, inplace=True)
+    records_monthly = records_monthly.convert_dtypes()
     records_monthly.reset_index(inplace=True)
     records_monthly.columns.name = None
     records_monthly.insert(0, 'suburb_id', suburb_id, allow_duplicates=False)
