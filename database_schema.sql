@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict VYS8DLP7vLaAUwGQcszMxSBROC4n4RnO7JtBclt3P6tYVDaOk1hT5wRqmPSQ8IA
+\restrict rMzgEVoW1Gyc2F2inXfMtIcmgK3ki7DJlqvY0aFpFrCflDufcnHQAteyiyarSZG
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -75,6 +75,33 @@ COMMENT ON COLUMN public.crawler_collect_trademe.failed_pages IS 'List of page n
 --
 
 COMMENT ON COLUMN public.crawler_collect_trademe.complete_after_page IS 'Web crawler is successfully executed after retrieving this page.';
+
+
+--
+-- Name: crime_count; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.crime_count (
+    suburb_id integer NOT NULL,
+    year smallint NOT NULL,
+    month smallint NOT NULL,
+    assault integer,
+    burglary integer,
+    endanger_people integer,
+    robbery integer,
+    sexual_offence integer,
+    theft integer
+);
+
+
+--
+-- Name: crime_suburbs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.crime_suburbs (
+    suburb_id integer NOT NULL,
+    name character varying(32)
+);
 
 
 --
@@ -488,6 +515,22 @@ ALTER TABLE ONLY public.crawler_collect_trademe ALTER COLUMN id SET DEFAULT next
 
 
 --
+-- Name: crime_count crime_count_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.crime_count
+    ADD CONSTRAINT crime_count_pk PRIMARY KEY (suburb_id, year, month);
+
+
+--
+-- Name: crime_suburbs crime_suburbs_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.crime_suburbs
+    ADD CONSTRAINT crime_suburbs_pk PRIMARY KEY (suburb_id);
+
+
+--
 -- Name: fuel_prices fuel_prices_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -608,6 +651,14 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 
 
 --
+-- Name: crime_count crime_count_crime_suburbs_suburb_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.crime_count
+    ADD CONSTRAINT crime_count_crime_suburbs_suburb_id_fk FOREIGN KEY (suburb_id) REFERENCES public.crime_suburbs(suburb_id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: properties_trademe_land_rate_account_key land_rate_account_key_properties_land_tax_land_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -651,5 +702,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict VYS8DLP7vLaAUwGQcszMxSBROC4n4RnO7JtBclt3P6tYVDaOk1hT5wRqmPSQ8IA
+\unrestrict rMzgEVoW1Gyc2F2inXfMtIcmgK3ki7DJlqvY0aFpFrCflDufcnHQAteyiyarSZG
 
