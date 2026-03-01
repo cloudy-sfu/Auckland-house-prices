@@ -56,7 +56,7 @@ with open("internet_outage/chorus_broadband_availability.json") as f:
     header_availability = json.load(f)
 
 # %% Get address to fetch.
-with open("internet_outage/missing_broadband_availability_trademe.sql") as f:
+with open("internet_outage/broadband_availability_trademe_todo.sql") as f:
     sql_listings = f.read()
 with engine.connect() as c:
     listings = pd.read_sql(sql_listings, c)

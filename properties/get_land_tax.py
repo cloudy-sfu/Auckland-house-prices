@@ -54,7 +54,7 @@ def get_float(d, key):
 
 
 # %% Get address to fetch.
-with open("properties/missing_land_tax_trademe.sql") as f:
+with open("properties/land_tax_trademe_todo.sql") as f:
     sql_listings = f.read()
 with engine.connect() as c:
     listings = pd.read_sql(sql_listings, c)
