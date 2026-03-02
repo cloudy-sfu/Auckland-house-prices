@@ -20,8 +20,8 @@ session = Session()
 global_start_year = 2020
 global_start_month = 1
 now = pd.Timestamp('now', tz='UTC')
-end_year = now.year
-end_month = now.month
+end_year = now.year - (now.month == 1)  # minus one natural month
+end_month = (now.month - 2) % 12 + 1
 
 # %% Get start year & month for each suburb.
 with open("crime/crime_start_year_month.sql") as f:
