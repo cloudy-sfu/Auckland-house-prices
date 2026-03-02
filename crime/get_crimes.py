@@ -6,7 +6,7 @@ import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine, NullPool, text
 
-from postgresql_upsert import insert_if_not_exists, upsert_dataframe
+from postgresql_upsert import upsert_dataframe
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,22 +16,7 @@ logging.basicConfig(
 )
 session = Session()
 
-# %% Update all suburbs.
-response = session.get("https://crimestats.co.nz/data/suburbs.json")
-response.raise_for_status()
-suburbs_raw = pd.DataFrame(response.json())
-suburbs = suburbs_raw.loc[
-    suburbs_raw['region'] == 'Auckland', ['suburbId', 'name']
-]
-suburbs.rename(columns={"suburbId": "suburb_id"}, inplace=True)
-engine = create_engine(os.environ['NEON_DB'], poolclass=NullPool)
-insert_if_not_exists(
-    engine, suburbs,
-    ["suburb_id"],
-    "crime_suburbs"
-)
 
-# %% Get crime counts.
 def get_crimes(suburb_id, start_year, start_month, end_year, end_month):
     records = []
     page_size = 1000
@@ -54,6 +39,10 @@ def get_crimes(suburb_id, start_year, start_month, end_year, end_month):
             break
         i += 1
     records = pd.DataFrame(records)
+    if records.empty:
+        logging.info(f"No crime counts of suburb {suburb_id_} from year={start_year}, "
+                     f"month={start_month} to year={end_year}, month={end_month}.")
+        return None
     records['victimisation_date'] = pd.to_datetime(records['victimisation_date'])
     records['year'] = records['victimisation_date'].dt.year
     records['month'] = records['victimisation_date'].dt.month
@@ -69,14 +58,14 @@ def get_crimes(suburb_id, start_year, start_month, end_year, end_month):
         "6": "burglary",  # break in and commit a crime
         "7": "theft",
     }
-    records_monthly['offence_name'] = records_monthly['offence_code'].map(offence_code_to_name)
+    records_monthly['offence_name'] = records_monthly['offence_code'].map(
+        offence_code_to_name)
     records_monthly = records_monthly.loc[~records_monthly['offence_name'].isna(), :]
     records_monthly = records_monthly.pivot(
         index=['year', 'month'],
         columns='offence_name',
         values='count'
     )
-    records_monthly.fillna(0, inplace=True)
     records_monthly = records_monthly.convert_dtypes()
     records_monthly.reset_index(inplace=True)
     records_monthly.columns.name = None
@@ -93,11 +82,11 @@ def get_missing_periods(missing_df, start_year, start_month, end_year, end_month
     # Optional boundary enforcement (if the dataframe contains data outside the global limits)
     if start_year and start_month:
         df_sorted = df_sorted[(df_sorted['year'] > start_year) | (
-                    (df_sorted['year'] == start_year) & (
-                        df_sorted['month'] >= start_month))]
+                (df_sorted['year'] == start_year) & (
+                df_sorted['month'] >= start_month))]
     if end_year and end_month:
         df_sorted = df_sorted[(df_sorted['year'] < end_year) | (
-                    (df_sorted['year'] == end_year) & (df_sorted['month'] <= end_month))]
+                (df_sorted['year'] == end_year) & (df_sorted['month'] <= end_month))]
 
     df_sorted.reset_index(drop=True, inplace=True)
     if df_sorted.shape[0] == 0:
@@ -121,18 +110,25 @@ def get_missing_periods(missing_df, start_year, start_month, end_year, end_month
     return missing_periods
 
 
-with open("crime/crime_count_missing.sql") as f:
-    sql_missing = f.read()
 start_year_ = 2020
 start_month_ = 1
 now = pd.Timestamp('now', tz='UTC')
 end_year_ = now.year
 end_month_ = now.month
+
+with open("crime/crimes_missing.sql") as f:
+    sql_missing = f.read()
+engine = create_engine(os.environ['NEON_DB'], poolclass=NullPool)
 with engine.connect() as c:
+    suburbs_exist = pd.read_sql(sql="select count(*) from suburbs", con=c)
+    assert suburbs_exist.iloc[0, 0] > 0, \
+        ("Run ./github/workflows/collect_population.yml action to initialize suburbs "
+         "before this script.")
     tasks_all = pd.read_sql(
         sql=text(sql_missing), con=c,
         params={"end_month": f"{end_year_}-{str(end_month_).zfill(2)}-01"}
     )
+
 records_all = []
 for suburb_id_, tasks_per_suburb in tasks_all.groupby('suburb_id'):
     query_periods = get_missing_periods(
@@ -146,10 +142,11 @@ for suburb_id_, tasks_per_suburb in tasks_all.groupby('suburb_id'):
                             f"{suburb_id_} from year={query_period[0]}, "
                             f"month={query_period[1]} to year={query_period[2]}, "
                             f"month={query_period[3]}. {type(e).__name__}: {e}")
-records_all = pd.concat(records_all, axis=0)
 
-upsert_dataframe(
-    engine, records_all,
-    ['suburb_id', 'year', 'month'],
-    'crime_count'
-)
+if records_all:
+    records_all = pd.concat(records_all, axis=0)
+    upsert_dataframe(
+        engine, records_all,
+        ['suburb_id', 'year', 'month'],
+        'crimes'
+    )

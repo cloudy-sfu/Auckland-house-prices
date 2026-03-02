@@ -1,0 +1,33 @@
+name: Collect population - Infometrics
+
+on:
+  schedule:
+    - cron: '0 0 10 8 *'  # Every year August 10th 0:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    env:
+      NEON_DB: ${{ secrets.NEON_DB }}
+      PYTHONPATH: . 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run the script
+        run: |
+          python population/suburbs.py
+          python population/population.py

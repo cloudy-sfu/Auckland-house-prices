@@ -12,10 +12,10 @@ WITH all_months AS (
 expected_records AS (
     -- Create a Cartesian product of all suburbs and all generated months
     SELECT
-        cs.suburb_id,
+        s.suburb_id,
         am.year,
         am.month
-    FROM crime_suburbs cs
+    FROM suburbs s
     CROSS JOIN all_months am
 )
 -- Find the expected records that are missing in the crime_count table
@@ -24,7 +24,7 @@ SELECT
     er.year,
     er.month
 FROM expected_records er
-LEFT JOIN crime_count cc
+LEFT JOIN crimes cc
     ON er.suburb_id = cc.suburb_id
     AND er.year = cc.year
     AND er.month = cc.month

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict rMzgEVoW1Gyc2F2inXfMtIcmgK3ki7DJlqvY0aFpFrCflDufcnHQAteyiyarSZG
+\restrict hdVVHerbZowkad4fBgUupfGutqxoLiOPWllLAqYgSKbgI63BjekRfyf4RKEDMTy
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -78,29 +78,19 @@ COMMENT ON COLUMN public.crawler_collect_trademe.complete_after_page IS 'Web cra
 
 
 --
--- Name: crime_count; Type: TABLE; Schema: public; Owner: -
+-- Name: crimes; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.crime_count (
+CREATE TABLE public.crimes (
     suburb_id integer NOT NULL,
     year smallint NOT NULL,
     month smallint NOT NULL,
-    assault integer,
-    burglary integer,
-    endanger_people integer,
-    robbery integer,
-    sexual_offence integer,
-    theft integer
-);
-
-
---
--- Name: crime_suburbs; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.crime_suburbs (
-    suburb_id integer NOT NULL,
-    name character varying(32)
+    assault integer DEFAULT 0 NOT NULL,
+    burglary integer DEFAULT 0 NOT NULL,
+    endanger_people integer DEFAULT 0 NOT NULL,
+    robbery integer DEFAULT 0 NOT NULL,
+    sexual_offence integer DEFAULT 0 NOT NULL,
+    theft integer DEFAULT 0 NOT NULL
 );
 
 
@@ -305,6 +295,17 @@ COMMENT ON COLUMN public.macroeconomics_ocr.date IS 'Announced date';
 
 
 --
+-- Name: population; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.population (
+    suburb_id integer NOT NULL,
+    year smallint NOT NULL,
+    value integer
+);
+
+
+--
 -- Name: properties_land_tax; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -488,6 +489,17 @@ COMMENT ON COLUMN public.schools.lang_pacific IS 'Some students are tanght in Pa
 
 
 --
+-- Name: suburbs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.suburbs (
+    suburb_id integer NOT NULL,
+    name character varying(32),
+    geometry jsonb
+);
+
+
+--
 -- Name: trademe_crawler_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -515,19 +527,11 @@ ALTER TABLE ONLY public.crawler_collect_trademe ALTER COLUMN id SET DEFAULT next
 
 
 --
--- Name: crime_count crime_count_pk; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: crimes crimes_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.crime_count
-    ADD CONSTRAINT crime_count_pk PRIMARY KEY (suburb_id, year, month);
-
-
---
--- Name: crime_suburbs crime_suburbs_pk; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crime_suburbs
-    ADD CONSTRAINT crime_suburbs_pk PRIMARY KEY (suburb_id);
+ALTER TABLE ONLY public.crimes
+    ADD CONSTRAINT crimes_pk PRIMARY KEY (suburb_id, year, month);
 
 
 --
@@ -587,6 +591,14 @@ ALTER TABLE ONLY public.macroeconomics_ocr
 
 
 --
+-- Name: population population_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.population
+    ADD CONSTRAINT population_pk PRIMARY KEY (suburb_id, year);
+
+
+--
 -- Name: properties_land_tax properties_land_tax_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -643,6 +655,14 @@ ALTER TABLE ONLY public.fuel_stations
 
 
 --
+-- Name: suburbs suburbs_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.suburbs
+    ADD CONSTRAINT suburbs_pk PRIMARY KEY (suburb_id);
+
+
+--
 -- Name: crawler_collect_trademe trademe_crawler_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -651,11 +671,11 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 
 
 --
--- Name: crime_count crime_count_crime_suburbs_suburb_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: crimes crime_count___fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.crime_count
-    ADD CONSTRAINT crime_count_crime_suburbs_suburb_id_fk FOREIGN KEY (suburb_id) REFERENCES public.crime_suburbs(suburb_id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY public.crimes
+    ADD CONSTRAINT crime_count___fk FOREIGN KEY (suburb_id) REFERENCES public.suburbs(suburb_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -672,6 +692,14 @@ ALTER TABLE ONLY public.properties_trademe_land_rate_account_key
 
 ALTER TABLE ONLY public.properties_trademe_land_rate_account_key
     ADD CONSTRAINT land_rate_account_key_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: population population_suburbs_suburb_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.population
+    ADD CONSTRAINT population_suburbs_suburb_id_fk FOREIGN KEY (suburb_id) REFERENCES public.suburbs(suburb_id);
 
 
 --
@@ -702,5 +730,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict rMzgEVoW1Gyc2F2inXfMtIcmgK3ki7DJlqvY0aFpFrCflDufcnHQAteyiyarSZG
+\unrestrict hdVVHerbZowkad4fBgUupfGutqxoLiOPWllLAqYgSKbgI63BjekRfyf4RKEDMTy
 
