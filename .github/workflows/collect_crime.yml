@@ -34,4 +34,4 @@ jobs:
           if [ "$check_suburbs_result" -eq 3 ]; then
               python population/suburbs.py
           fi
-          python crime/get_crimes.py
+          python crime/get_crime.py
