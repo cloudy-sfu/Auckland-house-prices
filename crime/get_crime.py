@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 session = Session()
 
-global_start_year = 2020
+global_start_year = 2015
 global_start_month = 1
 now = pd.Timestamp('now', tz='UTC')
 end_year = now.year - (now.month == 1)  # minus one natural month
@@ -94,7 +94,26 @@ for _, row in start_year_month.iterrows():
             index=['year', 'month'],
             columns='offence_name',
             values='count'
-        )
+        ).reindex(columns=offence_code_to_name.values())
+
+        # %% Fill holes in time range.
+        observed_start_year, observed_start_month = records_monthly.index.min()
+        observed_end_year, observed_end_month = records_monthly.index.max()
+        observed_series = [
+            (n // 12, n % 12 + 1)
+            for n in range(
+                observed_start_year * 12 + observed_start_month - 1,
+                observed_end_year * 12 + observed_end_month
+            )
+        ]
+        observed_series = pd.MultiIndex.from_tuples(observed_series)
+        observed_series = pd.DataFrame(index=observed_series)
+        observed_series.index.names = ('year', 'month')
+        records_monthly = pd.merge(records_monthly, observed_series,
+                                   how='left', left_index=True, right_index=True)
+        records_monthly = records_monthly.fillna(0)
+
+        # %% Adjust format to what database expects.
         records_monthly = records_monthly.convert_dtypes()
         records_monthly.reset_index(inplace=True)
         records_monthly.columns.name = None

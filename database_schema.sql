@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict uIN6HUroca1DyYj17TpeeZe7BqxjXFFpt5HZ3UX1e5xioXQgt62ur0H6cnkzbCv
+\restrict JdBJgwLS0mOBteitwgB6NImkemmMeSd7CKQPIvjSboptF9fzrGDQaeihhKYw6w1
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -85,12 +85,12 @@ CREATE TABLE public.crimes (
     suburb_id integer NOT NULL,
     year smallint NOT NULL,
     month smallint NOT NULL,
-    assault integer DEFAULT 0 NOT NULL,
-    burglary integer DEFAULT 0 NOT NULL,
-    endanger_people integer DEFAULT 0 NOT NULL,
-    robbery integer DEFAULT 0 NOT NULL,
-    sexual_offence integer DEFAULT 0 NOT NULL,
-    theft integer DEFAULT 0 NOT NULL
+    assault integer,
+    burglary integer,
+    endanger_people integer,
+    robbery integer,
+    sexual_offence integer,
+    theft integer
 );
 
 
@@ -730,5 +730,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict uIN6HUroca1DyYj17TpeeZe7BqxjXFFpt5HZ3UX1e5xioXQgt62ur0H6cnkzbCv
+\unrestrict JdBJgwLS0mOBteitwgB6NImkemmMeSd7CKQPIvjSboptF9fzrGDQaeihhKYw6w1
 
