@@ -22,7 +22,7 @@ end_year = now.year
 engine = create_engine(os.environ['NEON_DB'])
 with engine.connect() as c:
     existed_years = pd.read_sql("select distinct year from public.population", c)
-all_years = set(range(2020, end_year + 1))
+all_years = set(range(2015, end_year + 1))
 if not existed_years.empty:
     all_years = all_years.difference(existed_years['year'].tolist())
 

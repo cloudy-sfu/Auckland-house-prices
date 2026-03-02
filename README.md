@@ -113,18 +113,41 @@ Add the following variables into environment variables.
 Run the following command in terminal.
 
 ```
-python fuel/dashboard.py
+python crime/dashboard.py
 ```
 
 Find the URL in terminal output and open in the browser.
 
+Select a fuel type at left-top corner, fuel stations which supply this type of fuel will show on the map. Click any fuel station, the current price and location will show in the card at right-bottom corner.
+
 ![image-20260206023815973](./assets/image-20260206023815973.png)
-
-Select a fuel type at left-top corner, fuel stations which supply this type of fuel will show on the map.
-
-Click any fuel station, the current price and location will show in the card at right-bottom corner.
 
 Click "view historical price" to analyze the price in the past half year (or shorter if data is not available).
 
 ![image-20260206024017129](./assets/image-20260206024017129.png)
 
+### Crime count dashboard
+
+Activate Python environment "Dashboard".
+
+Add the following variables into environment variables.
+
+| Variable | Description                         |
+| -------- | ----------------------------------- |
+| NEON_DB  | Connection string to Neon database. |
+
+Run the following command in terminal.
+
+```
+python fuel/dashboard.py
+```
+
+Find the URL in terminal output and open in the browser.
+
+Select the start and end time at left-top corner (by default the past 12 months), number of crime cases (in logarithmic color bar) of each suburb will show on the map. Click any suburb, the name and total crime cases will show in the card at right-bottom corner.
+
+![image-20260303014545468](./assets/image-20260303014545468.png)
+
+Click "view breakdown" to analyze historical crime count of each month and each category.
+
+![image-20260303014703109](./assets/image-20260303014703109.png)
