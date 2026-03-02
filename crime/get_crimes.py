@@ -1,5 +1,6 @@
 import logging
 import os
+import subprocess
 import sys
 
 import pandas as pd
@@ -120,10 +121,6 @@ with open("crime/crimes_missing.sql") as f:
     sql_missing = f.read()
 engine = create_engine(os.environ['NEON_DB'], poolclass=NullPool)
 with engine.connect() as c:
-    suburbs_exist = pd.read_sql(sql="select count(*) from suburbs", con=c)
-    assert suburbs_exist.iloc[0, 0] > 0, \
-        ("Run ./github/workflows/collect_population.yml action to initialize suburbs "
-         "before this script.")
     tasks_all = pd.read_sql(
         sql=text(sql_missing), con=c,
         params={"end_month": f"{end_year_}-{str(end_month_).zfill(2)}-01"}

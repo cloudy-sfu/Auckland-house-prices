@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict hdVVHerbZowkad4fBgUupfGutqxoLiOPWllLAqYgSKbgI63BjekRfyf4RKEDMTy
+\restrict uIN6HUroca1DyYj17TpeeZe7BqxjXFFpt5HZ3UX1e5xioXQgt62ur0H6cnkzbCv
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -671,11 +671,11 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 
 
 --
--- Name: crimes crime_count___fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: crimes crimes_suburbs_suburb_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.crimes
-    ADD CONSTRAINT crime_count___fk FOREIGN KEY (suburb_id) REFERENCES public.suburbs(suburb_id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT crimes_suburbs_suburb_id_fk FOREIGN KEY (suburb_id) REFERENCES public.suburbs(suburb_id);
 
 
 --
@@ -683,7 +683,7 @@ ALTER TABLE ONLY public.crimes
 --
 
 ALTER TABLE ONLY public.properties_trademe_land_rate_account_key
-    ADD CONSTRAINT land_rate_account_key_properties_land_tax_land_id_fk FOREIGN KEY (land_id) REFERENCES public.properties_land_tax(land_id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT land_rate_account_key_properties_land_tax_land_id_fk FOREIGN KEY (land_id) REFERENCES public.properties_land_tax(land_id);
 
 
 --
@@ -691,7 +691,7 @@ ALTER TABLE ONLY public.properties_trademe_land_rate_account_key
 --
 
 ALTER TABLE ONLY public.properties_trademe_land_rate_account_key
-    ADD CONSTRAINT land_rate_account_key_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT land_rate_account_key_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id);
 
 
 --
@@ -707,7 +707,7 @@ ALTER TABLE ONLY public.population
 --
 
 ALTER TABLE ONLY public.properties_trademe_chorus_tlc
-    ADD CONSTRAINT properties_trademe_chorus_tlc_internet_availability_tlc_fk FOREIGN KEY (tlc) REFERENCES public.internet_availability(tlc) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT properties_trademe_chorus_tlc_internet_availability_tlc_fk FOREIGN KEY (tlc) REFERENCES public.internet_availability(tlc);
 
 
 --
@@ -715,7 +715,7 @@ ALTER TABLE ONLY public.properties_trademe_chorus_tlc
 --
 
 ALTER TABLE ONLY public.properties_trademe_chorus_tlc
-    ADD CONSTRAINT properties_trademe_chorus_tlc_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT properties_trademe_chorus_tlc_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id);
 
 
 --
@@ -730,5 +730,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict hdVVHerbZowkad4fBgUupfGutqxoLiOPWllLAqYgSKbgI63BjekRfyf4RKEDMTy
+\unrestrict uIN6HUroca1DyYj17TpeeZe7BqxjXFFpt5HZ3UX1e5xioXQgt62ur0H6cnkzbCv
 

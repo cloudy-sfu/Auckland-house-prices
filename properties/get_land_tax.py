@@ -67,17 +67,6 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
 
     # %% Check conditions to quit loop.
     if i % 500 == 0:
-        trademe_land_link_df = pd.DataFrame(trademe_land_link)
-        logging.info(f"Queued {trademe_land_link_df.shape[0]} records of "
-                     f"trademe listing ID and Auckland Council rate account key pairs, "
-                     f"uploading to database.")
-        upsert_dataframe(
-            engine,
-            trademe_land_link_df,
-            ["listing_id"],
-            "properties_trademe_land_rate_account_key"
-        )
-        trademe_land_link.clear()
         records_df = pd.DataFrame(records)
         records_df.drop_duplicates(subset=['land_id'], inplace=True)
         logging.info(f"Queued {records_df.shape[0]} records of land tax, uploading to "
@@ -89,6 +78,18 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
             "properties_land_tax"
         )
         records.clear()
+
+        trademe_land_link_df = pd.DataFrame(trademe_land_link)
+        logging.info(f"Queued {trademe_land_link_df.shape[0]} records of "
+                     f"trademe listing ID and Auckland Council rate account key pairs, "
+                     f"uploading to database.")
+        upsert_dataframe(
+            engine,
+            trademe_land_link_df,
+            ["listing_id"],
+            "properties_trademe_land_rate_account_key"
+        )
+        trademe_land_link.clear()
 
     now = pd.Timestamp('now', tz='UTC')
     if now - script_start_time > pd.Timedelta(hours=5, minutes=45):
@@ -148,17 +149,6 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         "nztm2000_y": get_float(response_json, 'y'),
     })
 
-trademe_land_link_df = pd.DataFrame(trademe_land_link)
-logging.info(f"Queued {trademe_land_link_df.shape[0]} records of "
-             f"trademe listing ID and Auckland Council rate account key pairs, "
-             f"uploading to database.")
-upsert_dataframe(
-    engine,
-    trademe_land_link_df,
-    ["listing_id"],
-    "properties_trademe_land_rate_account_key"
-)
-trademe_land_link.clear()
 records_df = pd.DataFrame(records)
 records_df.drop_duplicates(subset=['land_id'], inplace=True)
 logging.info(f"Queued {records_df.shape[0]} records of land tax, uploading to "
@@ -170,3 +160,15 @@ upsert_dataframe(
     "properties_land_tax"
 )
 records.clear()
+
+trademe_land_link_df = pd.DataFrame(trademe_land_link)
+logging.info(f"Queued {trademe_land_link_df.shape[0]} records of "
+             f"trademe listing ID and Auckland Council rate account key pairs, "
+             f"uploading to database.")
+upsert_dataframe(
+    engine,
+    trademe_land_link_df,
+    ["listing_id"],
+    "properties_trademe_land_rate_account_key"
+)
+trademe_land_link.clear()

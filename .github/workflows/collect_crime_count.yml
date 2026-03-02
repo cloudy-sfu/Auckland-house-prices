@@ -29,4 +29,9 @@ jobs:
 
       - name: Run the script
         run: |
-          python crime/get_crime_count.py
+          python crime/check_suburbs.py
+          check_suburbs_result=$?
+          if [ "$check_suburbs_result" -eq 3 ]; then
+              python population/suburbs.py
+          fi
+          python crime/get_crimes.py
