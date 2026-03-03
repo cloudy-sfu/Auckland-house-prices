@@ -183,6 +183,8 @@ def generate_map_figure(sy, sm, ey, em):
         # Logarithmic color scale for the map
         # Ref: https://plotly.com/python/colorscales/
         df["log_crimes"] = np.log10(df["total_crimes"].clip(lower=0) + 1)
+        crimes_lb = df['log_crimes'].quantile(0.025)
+        crimes_ub = df['log_crimes'].quantile(0.975)
 
         # Shallow red to dark red color scale
         fig = px.choropleth_map(
@@ -195,6 +197,7 @@ def generate_map_figure(sy, sm, ey, em):
             hover_data={"total_crimes": True, "suburb_id": False, "log_crimes": False},
             custom_data=["suburb_id", "name", "total_crimes"],
             color_continuous_scale="PuBu",
+            range_color=[crimes_lb, crimes_ub],
             zoom=zoom_level,
             opacity=0.7,
             height=None
