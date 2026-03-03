@@ -57,7 +57,7 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         upsert_dataframe(
             engine,
             homes_trademe_link_df,
-            ["assessment_id"],
+            ["listing_id"],
             "properties_trademe_homes_id"
         )
         homes_trademe_link.clear()
@@ -175,8 +175,8 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
             "bedrooms": pd.NA,
             "car_spaces": pd.NA,
             "ownership_type": pd.NA,
-            "sales": pd.NA,
-            "evaluation": pd.NA,
+            "sales": [],
+            "evaluation": [],
             "external_wall_material": pd.NA,
             "roof_material": pd.NA,
             "solar_value": pd.NA,
@@ -217,8 +217,8 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
                 # No key error protection, because if key misses, no default value can
                 # be provided.
                 "sale_date": event['date'],
-                "price": get_int(event, 'data', 'price'),
-                "sale_type": get_str(event, 'data', 'sale_type'),
+                "price": event['data']['price'],
+                "sale_type": event['data']['sale_type'],
             }
             for event in events_raw
             if event.get('key') == 'property_sale'
@@ -228,8 +228,8 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
                 # No key error protection, because if key misses, no default value can
                 # be provided.
                 "evaluated_date": event['date'],
-                "land_value": get_int(event, 'data', 'land_value'),
-                "improvement_value": get_int(event, 'data', 'improvement_value'),
+                "land_value": event['data']['land_value'],
+                "improvement_value": event['data']['improvement_value'],
             }
             for event in events_raw
             if event.get('key') == 'valuation'
@@ -238,7 +238,7 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         logging.warning(
             f"Cannot parse sales and capital value history of the house at \"{address}\", "
             f"property ID \"{property_id}\". {type(e).__name__}: {e}")
-        house['sales'] = house['evaluation'] = pd.NA
+        house['sales'] = house['evaluation'] = []
     else:
         house['sales'] = sales
         house['evaluation'] = evaluation
@@ -307,7 +307,7 @@ logging.info(f"Queued {homes_trademe_link_df.shape[0]} records of trademe "
 upsert_dataframe(
     engine,
     homes_trademe_link_df,
-    ["assessment_id"],
+    ["listing_id"],
     "properties_trademe_homes_id"
 )
 homes_trademe_link.clear()
