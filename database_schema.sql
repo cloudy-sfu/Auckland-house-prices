@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict BaaVspIpQc0homQvkJX5ik0JcryN4Phq8QVv8LvpdUOMDBFlKpobYZzTkG5TfcE
+\restrict OX3R3OEwduwjSR9Yb0HI4NrERWjpQrkJ3VWOrgpuGpq0z8U432BwlbPkxUBSvZX
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -302,6 +302,40 @@ CREATE TABLE public.population (
     suburb_id integer NOT NULL,
     year smallint NOT NULL,
     value integer
+);
+
+
+--
+-- Name: properties_homes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.properties_homes (
+    property_id uuid NOT NULL,
+    latitude double precision,
+    longitude double precision,
+    homes_estimated_price integer,
+    title_record integer,
+    garage_parking smallint,
+    has_deck boolean,
+    has_laundry boolean,
+    has_gas boolean,
+    decade_built smallint,
+    bathrooms smallint,
+    bedrooms smallint,
+    car_spaces smallint,
+    ownership_type character varying(32),
+    sales jsonb,
+    evaluation jsonb,
+    external_wall_material character varying(1),
+    roof_material character varying(1),
+    solar_value integer,
+    external_wall_condition character varying(1),
+    roof_condition character varying(1),
+    homes_estimated_price_updated_time date,
+    homes_estimated_rental_lb smallint,
+    homes_estimated_rental_ub smallint,
+    homes_estimated_rental_updated_date date,
+    contour character varying(2)
 );
 
 
@@ -610,6 +644,14 @@ ALTER TABLE ONLY public.population
 
 
 --
+-- Name: properties_homes properties_homes_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_homes
+    ADD CONSTRAINT properties_homes_pk PRIMARY KEY (property_id);
+
+
+--
 -- Name: properties_land_tax properties_land_tax_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -738,6 +780,14 @@ ALTER TABLE ONLY public.properties_trademe_chorus_tlc
 
 
 --
+-- Name: properties_trademe_homes_id properties_trademe_homes_id_properties_homes_property_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_trademe_homes_id
+    ADD CONSTRAINT properties_trademe_homes_id_properties_homes_property_id_fk FOREIGN KEY (homes_property_id) REFERENCES public.properties_homes(property_id);
+
+
+--
 -- Name: properties_trademe task_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -749,5 +799,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict BaaVspIpQc0homQvkJX5ik0JcryN4Phq8QVv8LvpdUOMDBFlKpobYZzTkG5TfcE
+\unrestrict OX3R3OEwduwjSR9Yb0HI4NrERWjpQrkJ3VWOrgpuGpq0z8U432BwlbPkxUBSvZX
 

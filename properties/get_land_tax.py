@@ -9,6 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 from tqdm import tqdm
 
+from dict_ops import get_float, get_int
 from postgresql_upsert import upsert_dataframe
 
 # %% Initialization.
@@ -27,31 +28,6 @@ header_1['referer'] = ("https://www.aucklandcouncil.govt.nz/en/property-rates-va
                        "find-property-rates-valuation.html")
 header_1['host'] = "www.aucklandcouncil.govt.nz"
 engine = create_engine(os.environ['NEON_DB'], poolclass=NullPool)
-
-
-def get_int(d, key):
-    value = d.get(key)
-    try:
-        value = int(value)
-    except TypeError:
-        value = pd.NA
-    except ValueError:
-        try:
-            value = float(value)
-            value = round(value)
-        except ValueError:
-            value = pd.NA
-    return value
-
-
-def get_float(d, key):
-    value = d.get(key)
-    try:
-        value = float(value)
-    except (TypeError, ValueError):
-        value = pd.NA
-    return value
-
 
 # %% Get address to fetch.
 with open("properties/trademe_missing_land_tax.sql") as f:
