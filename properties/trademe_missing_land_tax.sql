@@ -4,6 +4,6 @@ select
 from public.properties_trademe t1
 where not exists (
     select 1
-    from properties_trademe_land_rate_account_key t2
+    from properties_trademe_land_tax_assess t2
     where t2.listing_id = t1.listing_id
 );

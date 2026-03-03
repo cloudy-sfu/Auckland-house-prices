@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict JdBJgwLS0mOBteitwgB6NImkemmMeSd7CKQPIvjSboptF9fzrGDQaeihhKYw6w1
+\restrict BaaVspIpQc0homQvkJX5ik0JcryN4Phq8QVv8LvpdUOMDBFlKpobYZzTkG5TfcE
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -310,7 +310,7 @@ CREATE TABLE public.population (
 --
 
 CREATE TABLE public.properties_land_tax (
-    land_id character varying(16) NOT NULL,
+    assessment_id character varying(16) NOT NULL,
     land_area integer,
     floor_area integer,
     building_coverage_area integer,
@@ -320,15 +320,16 @@ CREATE TABLE public.properties_land_tax (
     land_usage character varying(64),
     land_tax_break_down jsonb,
     nztm2000_x double precision,
-    nztm2000_y double precision
+    nztm2000_y double precision,
+    title_record integer
 );
 
 
 --
--- Name: COLUMN properties_land_tax.land_id; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN properties_land_tax.assessment_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.properties_land_tax.land_id IS 'Auckland council rate account key';
+COMMENT ON COLUMN public.properties_land_tax.assessment_id IS 'Auckland council rate account key';
 
 
 --
@@ -395,20 +396,30 @@ CREATE TABLE public.properties_trademe_chorus_tlc (
 
 
 --
--- Name: properties_trademe_land_rate_account_key; Type: TABLE; Schema: public; Owner: -
+-- Name: properties_trademe_homes_id; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.properties_trademe_land_rate_account_key (
-    listing_id character varying(16) NOT NULL,
-    land_id character varying(16)
+CREATE TABLE public.properties_trademe_homes_id (
+    homes_property_id uuid,
+    listing_id character varying(16) NOT NULL
 );
 
 
 --
--- Name: TABLE properties_trademe_land_rate_account_key; Type: COMMENT; Schema: public; Owner: -
+-- Name: properties_trademe_land_tax_assess; Type: TABLE; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.properties_trademe_land_rate_account_key IS 'Auckland council rate account key.';
+CREATE TABLE public.properties_trademe_land_tax_assess (
+    listing_id character varying(16) NOT NULL,
+    assessment_id character varying(16)
+);
+
+
+--
+-- Name: TABLE properties_trademe_land_tax_assess; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.properties_trademe_land_tax_assess IS 'Auckland council rate account key.';
 
 
 --
@@ -603,7 +614,7 @@ ALTER TABLE ONLY public.population
 --
 
 ALTER TABLE ONLY public.properties_land_tax
-    ADD CONSTRAINT properties_land_tax_pk PRIMARY KEY (land_id);
+    ADD CONSTRAINT properties_land_tax_pk PRIMARY KEY (assessment_id);
 
 
 --
@@ -631,11 +642,19 @@ ALTER TABLE ONLY public.properties_trademe_chorus_tlc
 
 
 --
--- Name: properties_trademe_land_rate_account_key properties_trademe_land_rate_account_key_pk; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: properties_trademe_homes_id properties_trademe_homes_id_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.properties_trademe_land_rate_account_key
-    ADD CONSTRAINT properties_trademe_land_rate_account_key_pk PRIMARY KEY (listing_id);
+ALTER TABLE ONLY public.properties_trademe_homes_id
+    ADD CONSTRAINT properties_trademe_homes_id_pk PRIMARY KEY (listing_id);
+
+
+--
+-- Name: properties_trademe_land_tax_assess properties_trademe_land_tax_assess_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_trademe_land_tax_assess
+    ADD CONSTRAINT properties_trademe_land_tax_assess_pk PRIMARY KEY (listing_id);
 
 
 --
@@ -679,18 +698,10 @@ ALTER TABLE ONLY public.crimes
 
 
 --
--- Name: properties_trademe_land_rate_account_key land_rate_account_key_properties_land_tax_land_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: properties_trademe_land_tax_assess land_rate_account_key_properties_trademe_listing_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.properties_trademe_land_rate_account_key
-    ADD CONSTRAINT land_rate_account_key_properties_land_tax_land_id_fk FOREIGN KEY (land_id) REFERENCES public.properties_land_tax(land_id);
-
-
---
--- Name: properties_trademe_land_rate_account_key land_rate_account_key_properties_trademe_listing_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_trademe_land_rate_account_key
+ALTER TABLE ONLY public.properties_trademe_land_tax_assess
     ADD CONSTRAINT land_rate_account_key_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id);
 
 
@@ -700,6 +711,14 @@ ALTER TABLE ONLY public.properties_trademe_land_rate_account_key
 
 ALTER TABLE ONLY public.population
     ADD CONSTRAINT population_suburbs_suburb_id_fk FOREIGN KEY (suburb_id) REFERENCES public.suburbs(suburb_id);
+
+
+--
+-- Name: properties_trademe_land_tax_assess properties_land_tax_assessment_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_trademe_land_tax_assess
+    ADD CONSTRAINT properties_land_tax_assessment_id_fk FOREIGN KEY (assessment_id) REFERENCES public.properties_land_tax(assessment_id);
 
 
 --
@@ -730,5 +749,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict JdBJgwLS0mOBteitwgB6NImkemmMeSd7CKQPIvjSboptF9fzrGDQaeihhKYw6w1
+\unrestrict BaaVspIpQc0homQvkJX5ik0JcryN4Phq8QVv8LvpdUOMDBFlKpobYZzTkG5TfcE
 

@@ -54,7 +54,7 @@ def get_float(d, key):
 
 
 # %% Get address to fetch.
-with open("properties/land_tax_trademe.sql") as f:
+with open("properties/trademe_missing_land_tax.sql") as f:
     sql_listings = f.read()
 with engine.connect() as c:
     listings = pd.read_sql(sql_listings, c)
@@ -68,13 +68,13 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
     # %% Check conditions to quit loop.
     if i % 500 == 0:
         records_df = pd.DataFrame(records)
-        records_df.drop_duplicates(subset=['land_id'], inplace=True)
+        records_df.drop_duplicates(subset=['assessment_id'], inplace=True)
         logging.info(f"Queued {records_df.shape[0]} records of land tax, uploading to "
                      f"database.")
         upsert_dataframe(
             engine,
             records_df,
-            ["land_id"],
+            ["assessment_id"],
             "properties_land_tax"
         )
         records.clear()
@@ -87,7 +87,7 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
             engine,
             trademe_land_link_df,
             ["listing_id"],
-            "properties_trademe_land_rate_account_key"
+            "properties_trademe_land_tax_assess"
         )
         trademe_land_link.clear()
 
@@ -105,26 +105,26 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         )
         response.raise_for_status()
         response_json = response.json()
-        land_id = response_json['items'][0]['id']
+        assessment_id = response_json['items'][0]['id']
     except Exception as e:
         logging.warning(f"Cannot find rate account key of \"{address}\" in "
                         f"Auckland council. {type(e).__name__}: {e}")
         trademe_land_link.append({
             "listing_id": row['listing_id'],
-            "land_id": pd.NA,
+            "assessment_id": pd.NA,
         })
         continue
     else:
         trademe_land_link.append({
             "listing_id": row['listing_id'],
-            "land_id": land_id,
+            "assessment_id": assessment_id,
         })
 
     try:
         # %% Get land information.
         response = session.get(
             f"https://www.aucklandcouncil.govt.nz/nextapi/property/"
-            f"{land_id}/rate-assessment",
+            f"{assessment_id}/rate-assessment",
             headers=header_1,
         )
         response.raise_for_status()
@@ -136,7 +136,7 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
 
     # %% Parse land information.
     records.append({
-        "land_id": land_id,
+        "assessment_id": assessment_id,
         "land_area": get_int(response_json, 'area'),
         "floor_area": get_int(response_json, 'totalFloorArea'),
         "building_coverage_area": get_int(response_json, 'buildingSiteCoverage'),
@@ -147,16 +147,17 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         "land_tax_break_down": response_json.get('rateBreakdown', {}),
         "nztm2000_x": get_float(response_json, 'x'),
         "nztm2000_y": get_float(response_json, 'y'),
+        "title_record": get_int(response_json, 'recordOfTitle'),
     })
 
 records_df = pd.DataFrame(records)
-records_df.drop_duplicates(subset=['land_id'], inplace=True)
+records_df.drop_duplicates(subset=['assessment_id'], inplace=True)
 logging.info(f"Queued {records_df.shape[0]} records of land tax, uploading to "
              f"database.")
 upsert_dataframe(
     engine,
     records_df,
-    ["land_id"],
+    ["assessment_id"],
     "properties_land_tax"
 )
 records.clear()
@@ -169,6 +170,6 @@ upsert_dataframe(
     engine,
     trademe_land_link_df,
     ["listing_id"],
-    "properties_trademe_land_rate_account_key"
+    "properties_trademe_land_tax_assess"
 )
 trademe_land_link.clear()

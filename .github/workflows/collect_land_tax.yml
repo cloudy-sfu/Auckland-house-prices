@@ -1,9 +1,9 @@
 name: Collect land tax - Auckland Council
 
 on:
-  # 5:30 UTC (16:30 UTC+12, 17:30 UTC+13) after trademe data collection
+  # 4:30 UTC (16:30 UTC+12, 17:30 UTC+13) after trademe data collection
   schedule:
-    - cron: '30 5 * * 1-5'
+    - cron: '30 4 * * 1-5'
   workflow_dispatch:
 
 jobs:
