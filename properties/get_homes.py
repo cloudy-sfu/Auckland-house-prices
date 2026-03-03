@@ -216,7 +216,7 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
             {
                 # No key error protection, because if key misses, no default value can
                 # be provided.
-                "sale_date": pd.to_datetime(event['date']),
+                "sale_date": event['date'],
                 "price": get_int(event, 'data', 'price'),
                 "sale_type": get_str(event, 'data', 'sale_type'),
             }
@@ -227,7 +227,7 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
             {
                 # No key error protection, because if key misses, no default value can
                 # be provided.
-                "evaluated_date": pd.to_datetime(event['date']),
+                "evaluated_date": event['date'],
                 "land_value": get_int(event, 'data', 'land_value'),
                 "improvement_value": get_int(event, 'data', 'improvement_value'),
             }
