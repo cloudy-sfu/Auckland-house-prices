@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict OX3R3OEwduwjSR9Yb0HI4NrERWjpQrkJ3VWOrgpuGpq0z8U432BwlbPkxUBSvZX
+\restrict jsSQE6jiOiO1Uck63yva9qUosRvgITo32VDBlcY5OLhD84rRUkw7EZFxaNdVtaJ
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -331,7 +331,7 @@ CREATE TABLE public.properties_homes (
     solar_value integer,
     external_wall_condition character varying(1),
     roof_condition character varying(1),
-    homes_estimated_price_updated_time date,
+    homes_estimated_price_updated_date date,
     homes_estimated_rental_lb smallint,
     homes_estimated_rental_ub smallint,
     homes_estimated_rental_updated_date date,
@@ -799,5 +799,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict OX3R3OEwduwjSR9Yb0HI4NrERWjpQrkJ3VWOrgpuGpq0z8U432BwlbPkxUBSvZX
+\unrestrict jsSQE6jiOiO1Uck63yva9qUosRvgITo32VDBlcY5OLhD84rRUkw7EZFxaNdVtaJ
 

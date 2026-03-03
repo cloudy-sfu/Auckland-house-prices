@@ -6,6 +6,8 @@ import sys
 import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine, NullPool
+from tqdm import tqdm
+
 from dict_ops import get_float, get_int, get_bool, get_str
 from postgresql_upsert import upsert_dataframe
 
@@ -31,7 +33,7 @@ with engine.connect() as c:
 # %% Main loop.
 homes_trademe_link = []
 houses = []
-for i, row in listings.iterrows():
+for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
     listing_id = row['listing_id']
     address = row['address']
 
