@@ -67,13 +67,19 @@ for i, row in listings.iterrows():
 
     # %% Search address.
     try:
-        response = session.get(
-            "https://gateway.homes.co.nz/address/search",
-            params={"Address": row['address']},
-            headers=header
-        )
-        response.raise_for_status()
-        property_id = response.json()["Results"][0]['PropertyID']
+        for _ in range(3):
+            response = session.get(
+                "https://gateway.homes.co.nz/address/search",
+                params={"Address": address},
+                headers=header
+            )
+            response.raise_for_status()
+            result = response.json()["Results"][0]
+            property_id = result['PropertyID']
+            if property_id:
+                break
+            else:
+                address = result['Title']
     except Exception as e:
         logging.warning(f"Address \"{address}\" (trademe listing ID {listing_id}) not "
                         f"found. {type(e).__name__}: {e}")
@@ -82,11 +88,18 @@ for i, row in listings.iterrows():
             "homes_property_id": pd.NA
         })
         continue
-    else:
+
+    if property_id:
         homes_trademe_link.append({
             "listing_id": listing_id,
             "homes_property_id": property_id
         })
+    else:
+        homes_trademe_link.append({
+            "listing_id": listing_id,
+            "homes_property_id": pd.NA
+        })
+        continue
 
     # %% Get house properties.
     try:
@@ -132,7 +145,7 @@ for i, row in listings.iterrows():
         solar_value = get_str(house_raw, 'solar', 'estimate')
         try:
             solar_value = int(solar_value.replace(",", ""))
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, AttributeError):
             solar_value = pd.NA
 
         # LV: Level
@@ -143,7 +156,7 @@ for i, row in listings.iterrows():
         contour = get_str(house_raw, 'property_details', 'contour')
 
     except Exception as e:
-        logging.warning(f"Cannot parse detailed information of the house at \"{address}\", "
+        logging.warning(f"Cannot parse basic information of the house at \"{address}\", "
                         f"property ID \"{property_id}\". {type(e).__name__}: {e}")
         house = {
             "property_id": property_id,
@@ -256,7 +269,7 @@ for i, row in listings.iterrows():
         estimated_rental_updated_time = details.get("estimated_rental_revision_date", pd.NA)
     except Exception as e:
         logging.warning(
-            f"Cannot parse sales and capital value history of the house at \"{address}\", "
+            f"Cannot parse detailed information of the house at \"{address}\", "
             f"property ID \"{property_id}\". {type(e).__name__}: {e}")
         house['external_wall_condition'] = house['roof_condition'] = \
             house['homes_estimated_price_updated_date'] = \
