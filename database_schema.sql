@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 7mgIK0glJfdfseNvFNPBKvY1sdgQE6HLEA5lAv9X2F8k7GKBjQGfzfbODUY8SMO
+\restrict pMEynsVete6GjxxOeRD7h2CMoDVvYafjL0STgmXcYjgDx6GD3xurA2gIS5TQknF
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -322,14 +322,15 @@ CREATE TABLE public.properties_homes (
     bedrooms smallint,
     garage_parking smallint,
     car_spaces smallint,
-    title_record integer,
+    record_of_title character varying(16)[],
     ownership_type character varying(32),
     external_wall_material character varying(1),
     roof_material character varying(1),
     contour character varying(2),
     estimated_price integer,
     search_time_utc timestamp with time zone DEFAULT now(),
-    trademe_listing_id character varying(16)[]
+    trademe_listing_id character varying(16)[],
+    address character varying(128)
 );
 
 
@@ -366,7 +367,7 @@ CREATE TABLE public.properties_land_tax (
     land_tax_break_down jsonb,
     nztm2000_x double precision,
     nztm2000_y double precision,
-    title_record integer
+    record_of_title character varying(16)[]
 );
 
 
@@ -808,5 +809,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 7mgIK0glJfdfseNvFNPBKvY1sdgQE6HLEA5lAv9X2F8k7GKBjQGfzfbODUY8SMO
+\unrestrict pMEynsVete6GjxxOeRD7h2CMoDVvYafjL0STgmXcYjgDx6GD3xurA2gIS5TQknF
 

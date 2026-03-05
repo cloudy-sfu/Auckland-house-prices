@@ -104,6 +104,11 @@ for _, suburb in suburbs.iterrows():
             solar_value = int(solar_value.replace(",", ""))
         except:
             solar_value = None
+        record_of_title = get_str(card, 'property_details', 'certificate_of_title')
+        if record_of_title is None:
+            record_of_title = []
+        else:
+            record_of_title = record_of_title.split(",")
 
         house = {
             "property_id": property_id,
@@ -119,7 +124,7 @@ for _, suburb in suburbs.iterrows():
             "bedrooms": get_int(card, 'property_details', 'latest_bedrooms'),
             "garage_parking": get_int(card, 'property_details', 'garage_parking'),
             "car_spaces": get_int(card, 'property_details', 'latest_car_spaces'),
-            "record_of_title": get_str(card, 'property_details', 'certificate_of_title'),
+            "record_of_title": record_of_title,
             "ownership_type": get_str(card, 'property_details', 'ownership_type'),
             "external_wall_material": external_wall_material,
             "roof_material": roof_material,

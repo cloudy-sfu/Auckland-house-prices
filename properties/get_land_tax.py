@@ -44,6 +44,7 @@ for i, row in listings.iterrows():
     # %% Check conditions to quit loop.
     if i % 500 == 0:
         records_df = pd.DataFrame(records)
+        records_df = records_df.convert_dtypes()
         records_df.drop_duplicates(subset=['assessment_id'], inplace=True)
         logging.info(f"Queued {records_df.shape[0]} records of land tax, uploading to "
                      f"database.")
@@ -56,6 +57,7 @@ for i, row in listings.iterrows():
         records.clear()
 
         trademe_land_link_df = pd.DataFrame(trademe_land_link)
+        trademe_land_link_df = trademe_land_link_df.convert_dtypes()
         logging.info(f"Queued {trademe_land_link_df.shape[0]} records of "
                      f"trademe listing ID and Auckland Council rate account key pairs, "
                      f"uploading to database.")
@@ -111,6 +113,11 @@ for i, row in listings.iterrows():
         continue
 
     # %% Parse land information.
+    record_of_title = get_str(response_json, 'property_details', 'certificate_of_title')
+    if record_of_title is None:
+        record_of_title = []
+    else:
+        record_of_title = record_of_title.split(",")
     records.append({
         "assessment_id": assessment_id,
         "land_area": get_int(response_json, 'area'),
@@ -123,10 +130,11 @@ for i, row in listings.iterrows():
         "land_tax_break_down": response_json.get('rateBreakdown', []),
         "nztm2000_x": get_float(response_json, 'x'),
         "nztm2000_y": get_float(response_json, 'y'),
-        "record_of_title": get_str(response_json, 'recordOfTitle'),
+        "record_of_title": record_of_title,
     })
 
 records_df = pd.DataFrame(records)
+records_df = records_df.convert_dtypes()
 records_df.drop_duplicates(subset=['assessment_id'], inplace=True)
 logging.info(f"Queued {records_df.shape[0]} records of land tax, uploading to "
              f"database.")
@@ -139,6 +147,7 @@ upsert_dataframe(
 records.clear()
 
 trademe_land_link_df = pd.DataFrame(trademe_land_link)
+trademe_land_link_df = trademe_land_link_df.convert_dtypes()
 logging.info(f"Queued {trademe_land_link_df.shape[0]} records of "
              f"trademe listing ID and Auckland Council rate account key pairs, "
              f"uploading to database.")
