@@ -37,7 +37,7 @@ for _, suburb in suburbs.iterrows():
 
     # %% Encode polylines of suburb boundary.
     polylines = []
-    for seg in suburb['geometry']['coordinates']:
+    for seg in suburb['coordinates']:
         if len(seg) == 1:
             seg = seg[0]
         encoded_seg = polyline.encode(seg)
@@ -73,8 +73,8 @@ for _, suburb in suburbs.iterrows():
     houses = []
     for card in cards:
         property_id = card.get("property_id")
+        address = get_str(card, 'property_details', 'address')
         if not property_id:
-            address = get_str(card, 'property_details', 'address')
             url = card.get('url')
             logging.warning("Cannot find property ID of:\n"
                             f"Address = {address}\n"
@@ -108,6 +108,7 @@ for _, suburb in suburbs.iterrows():
         house = {
             "property_id": property_id,
             "suburb_id": suburb['suburb_id'],
+            "address": address[:128],
             "latitude": get_float(card, 'point', 'lat'),
             "longitude": get_float(card, 'point', 'long'),
             "decade_built": get_int(card, 'property_details', 'decade_built'),
@@ -118,7 +119,7 @@ for _, suburb in suburbs.iterrows():
             "bedrooms": get_int(card, 'property_details', 'latest_bedrooms'),
             "garage_parking": get_int(card, 'property_details', 'garage_parking'),
             "car_spaces": get_int(card, 'property_details', 'latest_car_spaces'),
-            "title_record": get_int(card, 'property_details', 'certificate_of_title'),
+            "record_of_title": get_str(card, 'property_details', 'certificate_of_title'),
             "ownership_type": get_str(card, 'property_details', 'ownership_type'),
             "external_wall_material": external_wall_material,
             "roof_material": roof_material,

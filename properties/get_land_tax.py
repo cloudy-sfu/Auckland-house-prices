@@ -8,7 +8,7 @@ from requests import Session
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
-from dict_ops import get_float, get_int
+from dict_ops import get_float, get_int, get_str
 from postgresql_upsert import upsert_dataframe
 
 # %% Initialization.
@@ -87,7 +87,7 @@ for i, row in listings.iterrows():
                         f"Auckland council. {type(e).__name__}: {e}")
         trademe_land_link.append({
             "listing_id": row['listing_id'],
-            "assessment_id": pd.NA,
+            "assessment_id": None,
         })
         continue
     else:
@@ -120,10 +120,10 @@ for i, row in listings.iterrows():
         "improvements_value": get_int(response_json, 'valueOfImprovements'),
         "land_tax": get_float(response_json, 'totalRatesInclCip'),
         "land_usage": response_json.get('landUseDescription', '')[:64],
-        "land_tax_break_down": response_json.get('rateBreakdown', {}),
+        "land_tax_break_down": response_json.get('rateBreakdown', []),
         "nztm2000_x": get_float(response_json, 'x'),
         "nztm2000_y": get_float(response_json, 'y'),
-        "title_record": get_int(response_json, 'recordOfTitle'),
+        "record_of_title": get_str(response_json, 'recordOfTitle'),
     })
 
 records_df = pd.DataFrame(records)

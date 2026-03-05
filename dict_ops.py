@@ -6,11 +6,15 @@ def get_dtype(d, *keys, dtype):
     try:
         for key in keys:
             value = value[key]
-        value = dtype(value)
-    except:
+    except (KeyError, IndexError, TypeError, AttributeError):
         return None
-    else:
+    if value is None:
         return value
+    try:
+        value = dtype(value)
+    except (TypeError, ValueError):
+        return None
+    return value
 
 
 get_float = partial(get_dtype, dtype=float)
