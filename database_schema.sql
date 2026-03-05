@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict jsSQE6jiOiO1Uck63yva9qUosRvgITo32VDBlcY5OLhD84rRUkw7EZFxaNdVtaJ
+\restrict 7mgIK0glJfdfseNvFNPBKvY1sdgQE6HLEA5lAv9X2F8k7GKBjQGfzfbODUY8SMO
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -311,31 +311,42 @@ CREATE TABLE public.population (
 
 CREATE TABLE public.properties_homes (
     property_id uuid NOT NULL,
+    suburb_id integer,
     latitude double precision,
     longitude double precision,
-    homes_estimated_price integer,
-    title_record integer,
-    garage_parking smallint,
+    decade_built smallint,
     has_deck boolean,
     has_laundry boolean,
     has_gas boolean,
-    decade_built smallint,
     bathrooms smallint,
     bedrooms smallint,
+    garage_parking smallint,
     car_spaces smallint,
+    title_record integer,
     ownership_type character varying(32),
-    sales jsonb,
-    evaluation jsonb,
     external_wall_material character varying(1),
     roof_material character varying(1),
-    solar_value integer,
+    contour character varying(2),
+    estimated_price integer,
+    search_time_utc timestamp with time zone DEFAULT now(),
+    trademe_listing_id character varying(16)[]
+);
+
+
+--
+-- Name: properties_homes_detail; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.properties_homes_detail (
+    property_id uuid NOT NULL,
+    sales jsonb,
+    capital_values jsonb,
     external_wall_condition character varying(1),
     roof_condition character varying(1),
-    homes_estimated_price_updated_date date,
-    homes_estimated_rental_lb smallint,
-    homes_estimated_rental_ub smallint,
-    homes_estimated_rental_updated_date date,
-    contour character varying(2)
+    estimated_rental_lb integer,
+    estimated_rental_ub integer,
+    estimated_rental_date date,
+    estimated_price_date date
 );
 
 
@@ -426,16 +437,6 @@ COMMENT ON COLUMN public.properties_trademe.task_id IS 'The record is retrieved 
 CREATE TABLE public.properties_trademe_chorus_tlc (
     listing_id character varying(16) NOT NULL,
     tlc integer
-);
-
-
---
--- Name: properties_trademe_homes_id; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.properties_trademe_homes_id (
-    homes_property_id uuid,
-    listing_id character varying(16) NOT NULL
 );
 
 
@@ -684,19 +685,19 @@ ALTER TABLE ONLY public.properties_trademe_chorus_tlc
 
 
 --
--- Name: properties_trademe_homes_id properties_trademe_homes_id_pk; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_trademe_homes_id
-    ADD CONSTRAINT properties_trademe_homes_id_pk PRIMARY KEY (listing_id);
-
-
---
 -- Name: properties_trademe_land_tax_assess properties_trademe_land_tax_assess_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.properties_trademe_land_tax_assess
     ADD CONSTRAINT properties_trademe_land_tax_assess_pk PRIMARY KEY (listing_id);
+
+
+--
+-- Name: properties_homes_detail property_homes_detail_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_homes_detail
+    ADD CONSTRAINT property_homes_detail_pk PRIMARY KEY (property_id);
 
 
 --
@@ -756,6 +757,14 @@ ALTER TABLE ONLY public.population
 
 
 --
+-- Name: properties_homes properties_homes_suburbs_suburb_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_homes
+    ADD CONSTRAINT properties_homes_suburbs_suburb_id_fk FOREIGN KEY (suburb_id) REFERENCES public.suburbs(suburb_id);
+
+
+--
 -- Name: properties_trademe_land_tax_assess properties_land_tax_assessment_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -780,11 +789,11 @@ ALTER TABLE ONLY public.properties_trademe_chorus_tlc
 
 
 --
--- Name: properties_trademe_homes_id properties_trademe_homes_id_properties_homes_property_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: properties_homes_detail property_homes_detail_properties_homes_property_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.properties_trademe_homes_id
-    ADD CONSTRAINT properties_trademe_homes_id_properties_homes_property_id_fk FOREIGN KEY (homes_property_id) REFERENCES public.properties_homes(property_id);
+ALTER TABLE ONLY public.properties_homes_detail
+    ADD CONSTRAINT property_homes_detail_properties_homes_property_id_fk FOREIGN KEY (property_id) REFERENCES public.properties_homes(property_id);
 
 
 --
@@ -799,5 +808,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict jsSQE6jiOiO1Uck63yva9qUosRvgITo32VDBlcY5OLhD84rRUkw7EZFxaNdVtaJ
+\unrestrict 7mgIK0glJfdfseNvFNPBKvY1sdgQE6HLEA5lAv9X2F8k7GKBjQGfzfbODUY8SMO
 

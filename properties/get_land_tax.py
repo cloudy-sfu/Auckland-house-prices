@@ -7,7 +7,6 @@ import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
-from tqdm import tqdm
 
 from dict_ops import get_float, get_int
 from postgresql_upsert import upsert_dataframe
@@ -38,7 +37,8 @@ with engine.connect() as c:
 # %% Main loop.
 trademe_land_link = []
 records = []
-for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
+logging.info(f"Total number of properties to query land tax: {listings.shape[0]}")
+for i, row in listings.iterrows():
     address = row['address']
 
     # %% Check conditions to quit loop.
