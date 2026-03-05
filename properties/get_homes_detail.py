@@ -4,10 +4,10 @@ import os
 import sys
 
 import pandas as pd
+from pandas._libs.tslibs.np_datetime import OutOfBoundsDatetime
 from requests import Session
 from sqlalchemy import create_engine, NullPool
 
-from dict_ops import *
 from postgresql_upsert import upsert_dataframe
 
 # %% Initialization.
@@ -54,8 +54,6 @@ for i, row in properties.iterrows():
         logging.warning("Execution time reaches 5 hours and 45 minutes, stop.")
         break
 
-    house = {"property_id": property_id}
-
     # %% Get sales record.
     try:
         response = session.get(
@@ -91,10 +89,7 @@ for i, row in properties.iterrows():
             f"Cannot parse sales and capital values history of property {property_id}. "
             f"{type(e).__name__}: {e}"
         )
-        house['sales'] = house['capital_values'] = []
-    else:
-        house['sales'] = sales
-        house['capital_values'] = evaluation
+        sales = evaluation = []
 
     try:
         response = session.get(
@@ -109,31 +104,46 @@ for i, row in properties.iterrows():
             f"Cannot parse detailed information of property {property_id}. "
             f"{type(e).__name__}: {e}"
         )
-        house['external_wall_condition'] = house['roof_condition'] = \
-            house['estimated_price_date'] = \
-            house['estimated_rental_lb'] = \
-            house['estimated_rental_ub'] = \
-            house['estimated_rental_date'] = None
+        external_wall = roof = estimated_price_date = estimated_rental_date = \
+            estimated_rental_lb = estimated_rental_ub = None
     else:
         # G: "Good",
         # A: "Average",
         # F: "Fair",
         # P: "Poor",
         # X: "Mixed"
-        building_condition = get_str(details, 'building_condition')
-        if building_condition and len(building_condition) == 2:
+        building_condition = details.get('building_condition')
+        if isinstance(building_condition, str) and len(building_condition) == 2:
             external_wall = building_condition[0]
             roof = building_condition[1]
         else:
             external_wall = roof = None
 
-        house['external_wall_condition'] = external_wall
-        house['roof_condition'] = roof
-        house['estimated_price_date'] = get_str(details, "estimated_value_revision_date")
-        house['estimated_rental_lb'] = get_int(details, "estimated_rental_lower_value")
-        house['estimated_rental_ub'] = get_int(details, "estimated_rental_upper_value")
-        house['estimated_rental_date'] = get_str(details, "estimated_rental_revision_date")
-
+        try:
+            estimated_price_date = details.get('estimated_value_revision_date')
+        except (AttributeError, OutOfBoundsDatetime):
+            estimated_price_date = None
+        try:
+            estimated_rental_date = details.get('estimated_rental_revision_date')
+        except (AttributeError, OutOfBoundsDatetime):
+            estimated_rental_date = None
+        try:
+            estimated_rental_lb = int(details.get("estimated_rental_lower_value"))
+        except (TypeError, ValueError):
+            estimated_rental_lb = None
+        try:
+            estimated_rental_ub = int(details.get("estimated_rental_upper_value"))
+        except (TypeError, ValueError):
+            estimated_rental_ub = None
+    house = {
+        "property_id": property_id,
+        "sales": sales,
+        "capital_values": evaluation,
+        "external_wall_condition": external_wall,
+        "roof_condition": roof,
+        "estimated_price_date": estimated_price_date,
+        "estimated_rental_date": estimated_rental_date,
+    }
     houses.append(house)
 
 houses_df = pd.DataFrame(houses)
