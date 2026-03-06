@@ -11,7 +11,6 @@ import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
-from tqdm import tqdm
 
 from postgresql_upsert import upsert_dataframe
 
@@ -56,16 +55,17 @@ with open("internet_outage/chorus_broadband_availability.json") as f:
     header_availability = json.load(f)
 
 # %% Get address to fetch.
-with open("internet_outage/broadband_availability_trademe.sql") as f:
-    sql_listings = f.read()
+with open("internet_outage/homes_no_chorus.sql") as f:
+    sql_houses = f.read()
 with engine.connect() as c:
-    listings = pd.read_sql(sql_listings, c)
+    houses = pd.read_sql(sql_houses, c)
+logging.info(f"Total number of houses to check broadband availability: {houses.shape[0]}")
 
 # %% Main loop.
 records = []
-trademe_chorus_link = []
+homes_chorus_link = []
 valve_1 = valve_2 = valve_3 = True
-for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
+for i, row in houses.iterrows():
     address = row['address']
 
     # %% Check conditions to quit loop.
@@ -81,14 +81,15 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
             "internet_availability"
         )
         records.clear()
-        trademe_chorus_link_df = pd.DataFrame(trademe_chorus_link)
-        logging.info(f"Queued {records_df.shape[0]} records of trademe listing ID and "
-                     f"Chorus address ID pairs, uploading to database.")
+        homes_chorus_link_df = pd.DataFrame(homes_chorus_link)
+        logging.info(
+            f"Queued {records_df.shape[0]} records of homes.co.nz property ID and "
+            f"Chorus address ID pairs, uploading to database.")
         upsert_dataframe(
             engine,
-            trademe_chorus_link_df,
-            ["listing_id"],
-            "properties_trademe_chorus_tlc"
+            homes_chorus_link_df,
+            ["property_id"],
+            "properties_homes_internet_availability_link"
         )
     if not (valve_1 and valve_2 and valve_3):
         logging.warning("Chorus API reaches daily limit and won't reset shortly, stop.")
@@ -127,16 +128,16 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
         structured_address_raw = response_json['structuredAddress']
         assert isinstance(structured_address_raw, dict)
     except Exception as e:
-        logging.warning(f"Fail to parse address and service ID of \"{address}\". "
+        logging.warning(f"Cannot find Chorus record of \"{address}\". "
                         f"{type(e).__name__}: {e}")
-        trademe_chorus_link.append({
-            "listing_id": row['listing_id'],
+        homes_chorus_link.append({
+            "property_id": row['property_id'],
             "tlc": pd.NA,
         })
         continue
     else:
-        trademe_chorus_link.append({
-            "listing_id": row['listing_id'],
+        homes_chorus_link.append({
+            "property_id": row['property_id'],
             "tlc": tlc,
         })
 
@@ -172,20 +173,17 @@ for i, row in tqdm(listings.iterrows(), total=listings.shape[0]):
             max_speed = services_b['speed_mbps']
             service_name = services_b['service']
     except Exception as e:
-        logging.warning(f"Fail to parse broadband availability of \"{address}\". "
+        logging.warning(f"Fail to parse broadband information of \"{address}\". "
                         f"{type(e).__name__}: {e}")
-        service_name = pd.NA
-        max_speed = pd.NA
-    structured_address = {
+        continue
+
+    records.append({
+        "tlc": tlc,
         "unit": structured_address_raw.get('unit'),
         "street_number": structured_address_raw.get('streetNumber'),
         "street_name": structured_address_raw.get('streetName'),
         "road_type": structured_address_raw.get('roadType'),
         "suburb": structured_address_raw.get('suburb'),
-    }
-    records.append({
-        "tlc": tlc,
-        "address": structured_address,
         "service_name": service_name,
         "max_speed": max_speed,
         "aid": aid,
@@ -202,12 +200,12 @@ upsert_dataframe(
     "internet_availability"
 )
 records.clear()
-trademe_chorus_link_df = pd.DataFrame(trademe_chorus_link)
-logging.info(f"Queued {records_df.shape[0]} records of trademe listing ID and "
+homes_chorus_link_df = pd.DataFrame(homes_chorus_link)
+logging.info(f"Queued {records_df.shape[0]} records of homes.co.nz property ID and "
              f"Chorus address ID pairs, uploading to database.")
 upsert_dataframe(
     engine,
-    trademe_chorus_link_df,
-    ["listing_id"],
-    "properties_trademe_chorus_tlc"
+    homes_chorus_link_df,
+    ["property_id"],
+    "properties_homes_internet_availability_link"
 )

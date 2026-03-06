@@ -8,8 +8,7 @@ from requests import Session
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
-from dict_ops import get_float, get_int, get_str
-from postgresql_upsert import upsert_dataframe
+from postgresql_upsert import upsert_dataframe, insert_if_not_exists
 
 # %% Initialization.
 logging.basicConfig(
@@ -29,16 +28,16 @@ header_1['host'] = "www.aucklandcouncil.govt.nz"
 engine = create_engine(os.environ['NEON_DB'], poolclass=NullPool)
 
 # %% Get address to fetch.
-with open("properties/trademe_missing_land_tax.sql") as f:
-    sql_listings = f.read()
+with open("properties/homes_no_land_tax_record.sql") as f:
+    sql_houses = f.read()
 with engine.connect() as c:
-    listings = pd.read_sql(sql_listings, c)
+    houses = pd.read_sql(sql_houses, c)
 
 # %% Main loop.
-trademe_land_link = []
+homes_land_link = []
 records = []
-logging.info(f"Total number of properties to query land tax: {listings.shape[0]}")
-for i, row in listings.iterrows():
+logging.info(f"Total number of properties to query land tax: {houses.shape[0]}")
+for i, row in houses.iterrows():
     address = row['address']
 
     # %% Check conditions to quit loop.
@@ -56,18 +55,19 @@ for i, row in listings.iterrows():
         )
         records.clear()
 
-        trademe_land_link_df = pd.DataFrame(trademe_land_link)
-        trademe_land_link_df = trademe_land_link_df.convert_dtypes()
-        logging.info(f"Queued {trademe_land_link_df.shape[0]} records of "
-                     f"trademe listing ID and Auckland Council rate account key pairs, "
+        homes_land_link_df = pd.DataFrame(homes_land_link)
+        homes_land_link_df = homes_land_link_df.convert_dtypes()
+        homes_land_link_df.drop_duplicates(inplace=True)
+        logging.info(f"Queued {homes_land_link_df.shape[0]} records of "
+                     f"homes.co.nz property ID and land tax assessment ID pairs, "
                      f"uploading to database.")
-        upsert_dataframe(
+        insert_if_not_exists(
             engine,
-            trademe_land_link_df,
-            ["listing_id"],
-            "properties_trademe_land_tax_assess"
+            homes_land_link_df,
+            ["property_id"],
+            "properties_homes_land_tax_link"
         )
-        trademe_land_link.clear()
+        homes_land_link.clear()
 
     now = pd.Timestamp('now', tz='UTC')
     if now - script_start_time > pd.Timedelta(hours=5, minutes=45):
@@ -82,19 +82,19 @@ for i, row in listings.iterrows():
             headers=header
         )
         response.raise_for_status()
-        response_json = response.json()
-        assessment_id = response_json['items'][0]['id']
+        assessment = response.json()
+        assessment_id = assessment['items'][0]['id']
     except Exception as e:
         logging.warning(f"Cannot find rate account key of \"{address}\" in "
                         f"Auckland council. {type(e).__name__}: {e}")
-        trademe_land_link.append({
-            "listing_id": row['listing_id'],
+        homes_land_link.append({
+            "property_id": row['property_id'],
             "assessment_id": None,
         })
         continue
     else:
-        trademe_land_link.append({
-            "listing_id": row['listing_id'],
+        homes_land_link.append({
+            "property_id": row['property_id'],
             "assessment_id": assessment_id,
         })
 
@@ -106,31 +106,69 @@ for i, row in listings.iterrows():
             headers=header_1,
         )
         response.raise_for_status()
-        response_json = response.json()
+        assessment = response.json()
     except Exception as e:
         logging.warning(f"Cannot find land information of \"{address}\" in "
                         f"Auckland council. {type(e).__name__}: {e}")
         continue
 
     # %% Parse land information.
-    record_of_title = get_str(response_json, 'property_details', 'certificate_of_title')
+    property_details = assessment.get('property_details')
+    if not isinstance(property_details, dict):
+        property_details = {}
+    record_of_title = property_details.get('recordOfTitle')
     if record_of_title is None:
         record_of_title = []
     else:
         record_of_title = record_of_title.split(",")
+    try:
+        land_area = int(assessment.get('area'))
+    except (TypeError, ValueError):
+        land_area = None
+    try:
+        floor_area = int(assessment.get('totalFloorArea'))
+    except (TypeError, ValueError):
+        floor_area = None
+    try:
+        building_coverage_area = int(assessment.get('buildingSiteCoverage'))
+    except (TypeError, ValueError):
+        building_coverage_area = None
+    try:
+        land_value = int(assessment.get('landValue'))
+    except (TypeError, ValueError):
+        land_value = None
+    try:
+        improvements_value = int(assessment.get('valueOfImprovements'))
+    except (TypeError, ValueError):
+        improvements_value = None
+    try:
+        land_tax = float(assessment.get('totalRatesInclCip'))
+    except (TypeError, ValueError):
+        land_tax = None
+    try:
+        nztm2000_x = float(assessment.get('x'))
+    except (TypeError, ValueError):
+        nztm2000_x = None
+    try:
+        nztm2000_y = float(assessment.get('y'))
+    except (TypeError, ValueError):
+        nztm2000_y = None
     records.append({
         "assessment_id": assessment_id,
-        "land_area": get_int(response_json, 'area'),
-        "floor_area": get_int(response_json, 'totalFloorArea'),
-        "building_coverage_area": get_int(response_json, 'buildingSiteCoverage'),
-        "land_value": get_int(response_json, 'landValue'),
-        "improvements_value": get_int(response_json, 'valueOfImprovements'),
-        "land_tax": get_float(response_json, 'totalRatesInclCip'),
-        "land_usage": response_json.get('landUseDescription', '')[:64],
-        "land_tax_break_down": response_json.get('rateBreakdown', []),
-        "nztm2000_x": get_float(response_json, 'x'),
-        "nztm2000_y": get_float(response_json, 'y'),
+        "land_area": land_area,
+        "floor_area": floor_area,
+        "building_coverage_area": building_coverage_area,
+        "land_value": land_value,
+        "improvements_value": improvements_value,
+        "land_tax": land_tax,
+        "land_usage": assessment.get('landUseDescription', '')[:64],
+        "land_tax_break_down": assessment.get('rateBreakdown', []),
+        "nztm2000_x": nztm2000_x,
+        "nztm2000_y": nztm2000_y,
         "record_of_title": record_of_title,
+        "street_number": assessment.get('streetNumber'),
+        "street_name": assessment.get('streetName'),
+        "suburb_name": assessment.get('suburbName'),
     })
 
 records_df = pd.DataFrame(records)
@@ -146,15 +184,16 @@ upsert_dataframe(
 )
 records.clear()
 
-trademe_land_link_df = pd.DataFrame(trademe_land_link)
-trademe_land_link_df = trademe_land_link_df.convert_dtypes()
-logging.info(f"Queued {trademe_land_link_df.shape[0]} records of "
-             f"trademe listing ID and Auckland Council rate account key pairs, "
+homes_land_link_df = pd.DataFrame(homes_land_link)
+homes_land_link_df = homes_land_link_df.convert_dtypes()
+homes_land_link_df.drop_duplicates(inplace=True)
+logging.info(f"Queued {homes_land_link_df.shape[0]} records of "
+             f"homes.co.nz property ID and land tax assessment ID pairs, "
              f"uploading to database.")
-upsert_dataframe(
+insert_if_not_exists(
     engine,
-    trademe_land_link_df,
-    ["listing_id"],
-    "properties_trademe_land_tax_assess"
+    homes_land_link_df,
+    ["property_id"],
+    "properties_homes_land_tax_link"
 )
-trademe_land_link.clear()
+homes_land_link.clear()

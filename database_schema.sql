@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict pMEynsVete6GjxxOeRD7h2CMoDVvYafjL0STgmXcYjgDx6GD3xurA2gIS5TQknF
+\restrict mfAFDYVZ2oK8Ba1cS1qv6COT6wlbVQhy7ZoMotUyTASpDywsWgsLcr5mf354SRQ
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -199,7 +199,11 @@ CREATE TABLE public.internet_availability (
     service_name character varying(8),
     max_speed smallint,
     aid character varying(16),
-    address jsonb
+    unit character varying(16),
+    street_number character varying(32),
+    street_name character varying(32),
+    road_type character varying(16),
+    suburb character varying(32)
 );
 
 
@@ -352,6 +356,26 @@ CREATE TABLE public.properties_homes_detail (
 
 
 --
+-- Name: properties_homes_internet_availability_link; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.properties_homes_internet_availability_link (
+    property_id uuid NOT NULL,
+    tlc integer
+);
+
+
+--
+-- Name: properties_homes_land_tax_link; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.properties_homes_land_tax_link (
+    property_id uuid NOT NULL,
+    assessment_id character varying(16)
+);
+
+
+--
 -- Name: properties_land_tax; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -367,7 +391,10 @@ CREATE TABLE public.properties_land_tax (
     land_tax_break_down jsonb,
     nztm2000_x double precision,
     nztm2000_y double precision,
-    record_of_title character varying(16)[]
+    record_of_title character varying(16)[],
+    street_number character varying(32),
+    street_name character varying(32),
+    suburb_name character varying(32)
 );
 
 
@@ -429,33 +456,6 @@ COMMENT ON COLUMN public.properties_trademe.start_time IS 'Start time of the hou
 --
 
 COMMENT ON COLUMN public.properties_trademe.task_id IS 'The record is retrieved by which web crawler job. Foreign key, determined by trademe_crawler.id ';
-
-
---
--- Name: properties_trademe_chorus_tlc; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.properties_trademe_chorus_tlc (
-    listing_id character varying(16) NOT NULL,
-    tlc integer
-);
-
-
---
--- Name: properties_trademe_land_tax_assess; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.properties_trademe_land_tax_assess (
-    listing_id character varying(16) NOT NULL,
-    assessment_id character varying(16)
-);
-
-
---
--- Name: TABLE properties_trademe_land_tax_assess; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.properties_trademe_land_tax_assess IS 'Auckland council rate account key.';
 
 
 --
@@ -646,6 +646,22 @@ ALTER TABLE ONLY public.population
 
 
 --
+-- Name: properties_homes_internet_availability_link properties_homes_internet_availability_link_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_homes_internet_availability_link
+    ADD CONSTRAINT properties_homes_internet_availability_link_pk PRIMARY KEY (property_id);
+
+
+--
+-- Name: properties_homes_land_tax_link properties_homes_land_tax_link_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_homes_land_tax_link
+    ADD CONSTRAINT properties_homes_land_tax_link_pk PRIMARY KEY (property_id);
+
+
+--
 -- Name: properties_homes properties_homes_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -675,22 +691,6 @@ ALTER TABLE ONLY public.properties_trademe
 
 ALTER TABLE ONLY public.properties_state_houses_new_dev
     ADD CONSTRAINT properties_state_houses_new_dev_pk PRIMARY KEY (info_marker_id);
-
-
---
--- Name: properties_trademe_chorus_tlc properties_trademe_chorus_tlc_pk; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_trademe_chorus_tlc
-    ADD CONSTRAINT properties_trademe_chorus_tlc_pk PRIMARY KEY (listing_id);
-
-
---
--- Name: properties_trademe_land_tax_assess properties_trademe_land_tax_assess_pk; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_trademe_land_tax_assess
-    ADD CONSTRAINT properties_trademe_land_tax_assess_pk PRIMARY KEY (listing_id);
 
 
 --
@@ -734,80 +734,8 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 
 
 --
--- Name: crimes crimes_suburbs_suburb_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crimes
-    ADD CONSTRAINT crimes_suburbs_suburb_id_fk FOREIGN KEY (suburb_id) REFERENCES public.suburbs(suburb_id);
-
-
---
--- Name: properties_trademe_land_tax_assess land_rate_account_key_properties_trademe_listing_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_trademe_land_tax_assess
-    ADD CONSTRAINT land_rate_account_key_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id);
-
-
---
--- Name: population population_suburbs_suburb_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.population
-    ADD CONSTRAINT population_suburbs_suburb_id_fk FOREIGN KEY (suburb_id) REFERENCES public.suburbs(suburb_id);
-
-
---
--- Name: properties_homes properties_homes_suburbs_suburb_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_homes
-    ADD CONSTRAINT properties_homes_suburbs_suburb_id_fk FOREIGN KEY (suburb_id) REFERENCES public.suburbs(suburb_id);
-
-
---
--- Name: properties_trademe_land_tax_assess properties_land_tax_assessment_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_trademe_land_tax_assess
-    ADD CONSTRAINT properties_land_tax_assessment_id_fk FOREIGN KEY (assessment_id) REFERENCES public.properties_land_tax(assessment_id);
-
-
---
--- Name: properties_trademe_chorus_tlc properties_trademe_chorus_tlc_internet_availability_tlc_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_trademe_chorus_tlc
-    ADD CONSTRAINT properties_trademe_chorus_tlc_internet_availability_tlc_fk FOREIGN KEY (tlc) REFERENCES public.internet_availability(tlc);
-
-
---
--- Name: properties_trademe_chorus_tlc properties_trademe_chorus_tlc_properties_trademe_listing_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_trademe_chorus_tlc
-    ADD CONSTRAINT properties_trademe_chorus_tlc_properties_trademe_listing_id_fk FOREIGN KEY (listing_id) REFERENCES public.properties_trademe(listing_id);
-
-
---
--- Name: properties_homes_detail property_homes_detail_properties_homes_property_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_homes_detail
-    ADD CONSTRAINT property_homes_detail_properties_homes_property_id_fk FOREIGN KEY (property_id) REFERENCES public.properties_homes(property_id);
-
-
---
--- Name: properties_trademe task_id; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_trademe
-    ADD CONSTRAINT task_id FOREIGN KEY (task_id) REFERENCES public.crawler_collect_trademe(id) ON UPDATE SET NULL ON DELETE SET NULL;
-
-
---
 -- PostgreSQL database dump complete
 --
 
-\unrestrict pMEynsVete6GjxxOeRD7h2CMoDVvYafjL0STgmXcYjgDx6GD3xurA2gIS5TQknF
+\unrestrict mfAFDYVZ2oK8Ba1cS1qv6COT6wlbVQhy7ZoMotUyTASpDywsWgsLcr5mf354SRQ
 
