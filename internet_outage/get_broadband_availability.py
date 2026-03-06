@@ -83,8 +83,8 @@ for i, row in houses.iterrows():
         records.clear()
         homes_chorus_link_df = pd.DataFrame(homes_chorus_link)
         logging.info(
-            f"Queued {records_df.shape[0]} records of homes.co.nz property ID and "
-            f"Chorus address ID pairs, uploading to database.")
+            f"Queued {homes_chorus_link_df.shape[0]} records of homes.co.nz property ID "
+            f"and Chorus address ID pairs, uploading to database.")
         upsert_dataframe(
             engine,
             homes_chorus_link_df,
@@ -201,8 +201,8 @@ upsert_dataframe(
 )
 records.clear()
 homes_chorus_link_df = pd.DataFrame(homes_chorus_link)
-logging.info(f"Queued {records_df.shape[0]} records of homes.co.nz property ID and "
-             f"Chorus address ID pairs, uploading to database.")
+logging.info(f"Queued {homes_chorus_link_df.shape[0]} records of homes.co.nz property ID "
+             f"and Chorus address ID pairs, uploading to database.")
 upsert_dataframe(
     engine,
     homes_chorus_link_df,
