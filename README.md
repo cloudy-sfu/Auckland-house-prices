@@ -52,19 +52,11 @@ Manually run each scheduled job once, to initially save data into database and e
 
 Add the following variables into GitHub repository settings "Secrets and variables > Actions > Secrets > Repository secrets".
 
-| Used by           | Variable       | Description                         |
-| ----------------- | -------------- | ----------------------------------- |
-| (All)             | NEON_DB        | Connection string to Neon database. |
-| collect_gaspy.yml | GASPY_EMAIL    | Email of "gaspy" account.           |
-| collect_gaspy.yml | GASPY_PASSWORD | Password of "gaspy" account.        |
-
-Add the following variables into GitHub repository settings "Secrets and variables > Actions > Variables > Repository variables".
-
-| Used by           | Variable           | Description                                                  |
-| ----------------- | ------------------ | ------------------------------------------------------------ |
-| collect_homes.yml | N_THREADS_CHORUS   | Number of threads of parallel data collection from Chorus.   |
-| collect_homes.yml | N_THREADS_LAND_TAX | Number of threads of parallel data collection of land tax.   |
-| collect_homes.yml | N_THREADS_HOMES    | umber of threads of parallel data collection of houses' details from home.co.nz |
+| Used by             | Variable       | Description                         |
+| ------------------- | -------------- | ----------------------------------- |
+| (All)               | NEON_DB        | Connection string to Neon database. |
+| `collect_gaspy.yml` | GASPY_EMAIL    | Email of "gaspy" account.           |
+| `collect_gaspy.yml` | GASPY_PASSWORD | Password of "gaspy" account.        |
 
 
 

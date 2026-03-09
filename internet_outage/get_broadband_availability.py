@@ -8,7 +8,6 @@ import uuid
 from math import ceil
 
 import pandas as pd
-from joblib import Parallel, delayed
 from requests import Session
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
@@ -62,142 +61,151 @@ with engine.connect() as c:
     houses = pd.read_sql(sql_houses, c)
 logging.info(f"Total number of houses to check broadband availability: {houses.shape[0]}")
 
+# %% Main loop.
+records = []
+homes_chorus_link = []
+valve_1 = valve_2 = valve_3 = True
+for i, row in houses.iterrows():
+    address = row['address']
 
-# %% Each parallel job.
-def batch(subset):
-    records = []
-    homes_chorus_link = []
-    valve_1 = valve_2 = valve_3 = True
-    for _, row in subset.iterrows():
-        address = row['address']
+    # %% Check conditions to quit loop.
+    if i % 500 == 0:
+        records_df = pd.DataFrame(records)
+        records_df.drop_duplicates(subset=['tlc'], inplace=True)
+        logging.info(f"Queued {records_df.shape[0]} records of broadband availability, "
+                     f"uploading to database.")
+        upsert_dataframe(
+            engine,
+            records_df,
+            ["tlc"],
+            "internet_availability"
+        )
+        records.clear()
+        homes_chorus_link_df = pd.DataFrame(homes_chorus_link)
+        logging.info(
+            f"Queued {homes_chorus_link_df.shape[0]} records of homes.co.nz property ID "
+            f"and Chorus address ID pairs, uploading to database.")
+        upsert_dataframe(
+            engine,
+            homes_chorus_link_df,
+            ["property_id"],
+            "properties_homes_internet_availability_link"
+        )
+    if not (valve_1 and valve_2 and valve_3):
+        logging.warning("Chorus API reaches daily limit and won't reset shortly, stop.")
+        break
 
-        # Check conditions to quit loop
-        if not (valve_1 and valve_2 and valve_3):
-            logging.warning(
-                "Chorus API reaches daily limit and won't reset shortly, stop.")
-            break
+    now = pd.Timestamp('now', tz='UTC')
+    if now - script_start_time > pd.Timedelta(hours=5, minutes=45):
+        logging.warning("Execution time reaches 5 hours and 45 minutes, stop.")
+        break
 
-        now = pd.Timestamp('now', tz='UTC')
-        if now - script_start_time > pd.Timedelta(hours=5, minutes=45):
-            logging.warning("Execution time reaches 5 hours and 45 minutes, stop.")
-            break
-
-        try:
-            # Get "aid"
-            response = session.get(
-                "https://api.chorus.co.nz/addresslookup/v1/addresses",
-                params={"fuzzy": "true", "q": address},
-                headers=header_address,
-            )
-            response.raise_for_status()
-            valve_1 = rate_limit(response.headers)
-            response_json = response.json()
-            assert response_json['results'], "Chorus cannot find AID of this address."
-            aid = response_json['results'][0]['aid']
-            if not valve_1:
-                # the next step will use the same API again, so quit when reached the
-                # limit
-                continue
-
-            # Get "tlc"
-            response = session.get(
-                f"https://api.chorus.co.nz/addresslookup/v1/addresses/aid:{aid}",
-                headers=header_address,
-            )
-            response.raise_for_status()
-            valve_2 = rate_limit(response.headers)
-            response_json = response.json()
-            tlc = response_json['references']['tlc']
-            structured_address_raw = response_json['structuredAddress']
-            assert isinstance(structured_address_raw, dict)
-        except Exception as e:
-            logging.warning(f"Cannot find Chorus record of \"{address}\". "
-                            f"{type(e).__name__}: {e}")
-            homes_chorus_link.append({
-                "property_id": row['property_id'],
-                "tlc": pd.NA,
-            })
-            continue
-        else:
-            homes_chorus_link.append({
-                "property_id": row['property_id'],
-                "tlc": tlc,
-            })
-
-        try:
-            # Get available service
-            sentry_trace_id = uuid.uuid4().hex
-            sentry_span_id = secrets.token_hex(8)
-            baggage = (
-                f"sentry-environment=production,sentry-release=public-website-frontend"
-                f"%402.1.40,sentry-public_key=6d1e0cc8e0964ad2a39a4ced25ee0b3c,"
-                f"sentry-trace_id={sentry_trace_id}")
-            header_availability_1 = header_availability.copy()
-            header_availability_1['baggage'] = baggage
-            header_availability_1['sentry-trace'] = f"{sentry_trace_id}-{sentry_span_id}"
-
-            response = session.get(
-                f"https://www.chorus.co.nz/api/bbc/bcc/{tlc}",
-                headers=header_availability_1
-            )
-            response.raise_for_status()
-            valve_3 = int(response.headers['X-RateLimit-Remaining']) > 0
-
-            # Parse the best available service
-            response_json = response.json()
-            assert response_json['success'], \
-                f"Chorus raises status code {response_json['statusCode']}."
-            services = pd.DataFrame(response_json['available_services'])
-            services = services.loc[services['capable'] == 'YES', :]
-            if services.empty:
-                service_name = pd.NA
-                max_speed = pd.NA
-            else:
-                services_b = services.iloc[services['speed_mbps'].argmax()]
-                max_speed = services_b['speed_mbps']
-                service_name = services_b['service']
-        except Exception as e:
-            logging.warning(f"Fail to parse broadband information of \"{address}\". "
-                            f"{type(e).__name__}: {e}")
+    try:
+        # %% Get "aid".
+        response = session.get(
+            "https://api.chorus.co.nz/addresslookup/v1/addresses",
+            params={"fuzzy": "true", "q": address},
+            headers=header_address,
+        )
+        response.raise_for_status()
+        valve_1 = rate_limit(response.headers)
+        response_json = response.json()
+        assert response_json['results'], "Chorus cannot find AID of this address."
+        aid = response_json['results'][0]['aid']
+        if not valve_1:
+            # the next step will use the same API again, so quit when reached the limit
             continue
 
-        records.append({
+        # %% Get "tlc".
+        response = session.get(
+            f"https://api.chorus.co.nz/addresslookup/v1/addresses/aid:{aid}",
+            headers=header_address,
+        )
+        response.raise_for_status()
+        valve_2 = rate_limit(response.headers)
+        response_json = response.json()
+        tlc = response_json['references']['tlc']
+        structured_address_raw = response_json['structuredAddress']
+        assert isinstance(structured_address_raw, dict)
+    except Exception as e:
+        logging.warning(f"Cannot find Chorus record of \"{address}\". "
+                        f"{type(e).__name__}: {e}")
+        homes_chorus_link.append({
+            "property_id": row['property_id'],
+            "tlc": pd.NA,
+        })
+        continue
+    else:
+        homes_chorus_link.append({
+            "property_id": row['property_id'],
             "tlc": tlc,
-            "unit": structured_address_raw.get('unit'),
-            "street_number": structured_address_raw.get('streetNumber'),
-            "street_name": structured_address_raw.get('streetName'),
-            "road_type": structured_address_raw.get('roadType'),
-            "suburb": structured_address_raw.get('suburb'),
-            "service_name": service_name,
-            "max_speed": max_speed,
-            "aid": aid,
         })
 
-    records_df = pd.DataFrame(records)
-    records_df.drop_duplicates(subset=['tlc'], inplace=True)
-    logging.info(f"Queued {records_df.shape[0]} records of broadband availability, "
-                 f"uploading to database.")
-    upsert_dataframe(
-        engine,
-        records_df,
-        ["tlc"],
-        "internet_availability"
-    )
-    records.clear()
-    homes_chorus_link_df = pd.DataFrame(homes_chorus_link)
-    logging.info(
-        f"Queued {homes_chorus_link_df.shape[0]} records of homes.co.nz property ID "
-        f"and Chorus address ID pairs, uploading to database.")
-    upsert_dataframe(
-        engine,
-        homes_chorus_link_df,
-        ["property_id"],
-        "properties_homes_internet_availability_link"
-    )
+    try:
+        # %% Get available service.
+        sentry_trace_id = uuid.uuid4().hex
+        sentry_span_id = secrets.token_hex(8)
+        baggage = (f"sentry-environment=production,sentry-release=public-website-frontend"
+                   f"%402.1.40,sentry-public_key=6d1e0cc8e0964ad2a39a4ced25ee0b3c,"
+                   f"sentry-trace_id={sentry_trace_id}")
+        header_availability_1 = header_availability.copy()
+        header_availability_1['baggage'] = baggage
+        header_availability_1['sentry-trace'] = f"{sentry_trace_id}-{sentry_span_id}"
 
+        response = session.get(
+            f"https://www.chorus.co.nz/api/bbc/bcc/{tlc}",
+            headers=header_availability_1
+        )
+        response.raise_for_status()
+        valve_3 = int(response.headers['X-RateLimit-Remaining']) > 0
 
-# %% Control parallel jobs.
-n_threads = int(os.environ['N_THREADS_CHORUS'])
-Parallel(n_jobs=n_threads, prefer="threads")(
-    delayed(batch)(houses.iloc[i:i + 500, :]) for i in range(0, houses.shape[0], 500)
+        # %% Parse the best available service.
+        response_json = response.json()
+        assert response_json['success'], \
+            f"Chorus raises status code {response_json['statusCode']}."
+        services = pd.DataFrame(response_json['available_services'])
+        services = services.loc[services['capable'] == 'YES', :]
+        if services.empty:
+            service_name = pd.NA
+            max_speed = pd.NA
+        else:
+            services_b = services.iloc[services['speed_mbps'].argmax()]
+            max_speed = services_b['speed_mbps']
+            service_name = services_b['service']
+    except Exception as e:
+        logging.warning(f"Fail to parse broadband information of \"{address}\". "
+                        f"{type(e).__name__}: {e}")
+        continue
+
+    records.append({
+        "tlc": tlc,
+        "unit": structured_address_raw.get('unit'),
+        "street_number": structured_address_raw.get('streetNumber'),
+        "street_name": structured_address_raw.get('streetName'),
+        "road_type": structured_address_raw.get('roadType'),
+        "suburb": structured_address_raw.get('suburb'),
+        "service_name": service_name,
+        "max_speed": max_speed,
+        "aid": aid,
+    })
+
+records_df = pd.DataFrame(records)
+records_df.drop_duplicates(subset=['tlc'], inplace=True)
+logging.info(f"Queued {records_df.shape[0]} records of broadband availability, "
+             f"uploading to database.")
+upsert_dataframe(
+    engine,
+    records_df,
+    ["tlc"],
+    "internet_availability"
+)
+records.clear()
+homes_chorus_link_df = pd.DataFrame(homes_chorus_link)
+logging.info(f"Queued {homes_chorus_link_df.shape[0]} records of homes.co.nz property ID "
+             f"and Chorus address ID pairs, uploading to database.")
+upsert_dataframe(
+    engine,
+    homes_chorus_link_df,
+    ["property_id"],
+    "properties_homes_internet_availability_link"
 )

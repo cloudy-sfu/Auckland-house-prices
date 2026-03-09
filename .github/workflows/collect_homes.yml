@@ -11,10 +11,7 @@ jobs:
 
     env:
       NEON_DB: ${{ secrets.NEON_DB }}
-      PYTHONPATH: .
-      N_THREADS_CHORUS: ${{ vars.N_THREADS_CHORUS }}
-      N_THREADS_LAND_TAX: ${{ vars.N_THREADS_LAND_TAX }}
-      N_THREADS_HOMES: ${{ vars.N_THREADS_HOMES }}
+      PYTHONPATH: . 
 
     steps:
       - name: Checkout code
