@@ -143,6 +143,8 @@ for i, row in properties.iterrows():
         "roof_condition": roof,
         "estimated_price_date": estimated_price_date,
         "estimated_rental_date": estimated_rental_date,
+        "estimated_rental_lb": estimated_rental_lb,
+        "estimated_rental_ub": estimated_rental_ub,
     }
     houses.append(house)
 
