@@ -118,7 +118,6 @@ for i, row in properties.iterrows():
             roof = building_condition[1]
         else:
             external_wall = roof = None
-
         try:
             estimated_price_date = details.get('estimated_value_revision_date')
         except (AttributeError, OutOfBoundsDatetime):

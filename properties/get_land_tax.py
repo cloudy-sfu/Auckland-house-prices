@@ -113,10 +113,7 @@ for i, row in houses.iterrows():
         continue
 
     # %% Parse land information.
-    property_details = assessment.get('property_details')
-    if not isinstance(property_details, dict):
-        property_details = {}
-    record_of_title = property_details.get('recordOfTitle')
+    record_of_title = assessment.get('recordOfTitle')
     if record_of_title is None:
         record_of_title = []
     else:
