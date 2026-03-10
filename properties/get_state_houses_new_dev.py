@@ -59,6 +59,11 @@ response.raise_for_status()
 response_text = BeautifulSoup(response.text, 'html.parser')
 local_board_cards = response_text.find_all("article", {"data-project-location": "[\"Auckland\"]"})
 state_houses = []
+month_map = {
+    "January": 1, "February": 2, "March": 3, "April": 4,
+    "May": 5, "June": 6, "July": 7, "August": 8,
+    "September": 9, "October": 10, "November": 11, "December": 12
+}
 
 for local_board_card in tqdm(local_board_cards):
     local_board_link = local_board_card.find('a').get('href')
@@ -126,11 +131,18 @@ for local_board_card in tqdm(local_board_cards):
                 description = soup.get_text(separator="\n")
                 updated_time = regex_extract("Update", description)
                 if not pd.isna(updated_time):
-                    match_2 = re.match(r"(^.*\d{4}$)", updated_time)
+                    match_2 = re.search(
+                        r"(January|February|March|April|May|June|July|August|"
+                        r"September|October|November|December)\s.*(\d{4})$",
+                        updated_time
+                    )
                     if match_2:
-                        updated_time = match_2.group(1)
+                        updated_month = month_map[match_2.group(1)]
+                        updated_year = int(match_2.group(2))
                     else:
-                        updated_time = pd.NA
+                        updated_month = updated_year = pd.NA
+                else:
+                    updated_month = updated_year = pd.NA
                 land_area = regex_integer(regex_extract("Land area", description))
                 build_type = regex_extract("Build Type", description)
                 number_of_homes = regex_extract("Number of homes", description)
@@ -143,9 +155,12 @@ for local_board_card in tqdm(local_board_cards):
                         planned_completion = match_2.group(1)
                     else:
                         planned_completion = pd.NA
+                else:
+                    planned_completion = pd.NA
             else:
-                updated_time = land_area = build_type = number_of_homes = parking_space = \
-                    progress = planned_completion = pd.NA
+                updated_month = updated_year = land_area = build_type = \
+                    number_of_homes = parking_space = progress = planned_completion = \
+                    pd.NA
 
             # Parse the embedded GeoJSON string to a Shapely Geometry (Point/Polygon)
             geo_str = marker.get('infoMarkerGeo')
@@ -165,7 +180,8 @@ for local_board_card in tqdm(local_board_cards):
                 "info_marker_id": info_marker_id,
                 'local_board': local_board,
                 'address': address,
-                'updated_time': updated_time,
+                "updated_year": updated_year,
+                "updated_month": updated_month,
                 "land_area": land_area,
                 "build_type": build_type,
                 "number_of_homes": number_of_homes,
@@ -178,6 +194,7 @@ for local_board_card in tqdm(local_board_cards):
     else:
         continue
 state_houses = pd.DataFrame(state_houses)
+state_houses = state_houses.convert_dtypes()
 
 # %%
 engine = create_engine(os.environ['NEON_DB'])

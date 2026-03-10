@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict x6yy7jyygyB63EnQXCdzJst2mVGK7pjAcDoTYyvYIzYPSTfTVPsMQTSiuvyyEMM
+\restrict sdLfLWn3uaXMNjp7j22Wee9tvi8tREGHw3LABgSJd7xvuHTK0ASe14rh7WXVgS3
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -427,7 +427,6 @@ CREATE TABLE public.properties_state_houses_new_dev (
     info_marker_id integer NOT NULL,
     local_board character varying(64),
     address character varying(256),
-    updated_time character varying(32),
     land_area integer,
     build_type character varying(256),
     number_of_homes character varying(64),
@@ -435,7 +434,9 @@ CREATE TABLE public.properties_state_houses_new_dev (
     progress character varying(32),
     planned_completion character varying(32),
     location jsonb,
-    step character varying(32)
+    step character varying(32),
+    updated_year smallint,
+    updated_month smallint
 );
 
 
@@ -759,5 +760,5 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict x6yy7jyygyB63EnQXCdzJst2mVGK7pjAcDoTYyvYIzYPSTfTVPsMQTSiuvyyEMM
+\unrestrict sdLfLWn3uaXMNjp7j22Wee9tvi8tREGHw3LABgSJd7xvuHTK0ASe14rh7WXVgS3
 
