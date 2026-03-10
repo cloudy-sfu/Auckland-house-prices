@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict mfAFDYVZ2oK8Ba1cS1qv6COT6wlbVQhy7ZoMotUyTASpDywsWgsLcr5mf354SRQ
+\restrict x6yy7jyygyB63EnQXCdzJst2mVGK7pjAcDoTYyvYIzYPSTfTVPsMQTSiuvyyEMM
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -203,7 +203,7 @@ CREATE TABLE public.internet_availability (
     street_number character varying(32),
     street_name character varying(32),
     road_type character varying(16),
-    suburb character varying(32)
+    suburb character varying(40)
 );
 
 
@@ -403,6 +403,20 @@ CREATE TABLE public.properties_land_tax (
 --
 
 COMMENT ON COLUMN public.properties_land_tax.assessment_id IS 'Auckland council rate account key';
+
+
+--
+-- Name: properties_state_houses; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.properties_state_houses (
+    parcel_id integer NOT NULL,
+    record_of_title character varying(16),
+    owner character varying(64),
+    area double precision,
+    updated_date date,
+    geometry jsonb
+);
 
 
 --
@@ -694,6 +708,14 @@ ALTER TABLE ONLY public.properties_state_houses_new_dev
 
 
 --
+-- Name: properties_state_houses properties_state_houses_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_state_houses
+    ADD CONSTRAINT properties_state_houses_pk PRIMARY KEY (parcel_id);
+
+
+--
 -- Name: properties_homes_detail property_homes_detail_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -737,5 +759,5 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict mfAFDYVZ2oK8Ba1cS1qv6COT6wlbVQhy7ZoMotUyTASpDywsWgsLcr5mf354SRQ
+\unrestrict x6yy7jyygyB63EnQXCdzJst2mVGK7pjAcDoTYyvYIzYPSTfTVPsMQTSiuvyyEMM
 
