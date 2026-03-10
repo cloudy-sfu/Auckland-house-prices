@@ -91,6 +91,8 @@ for i, row in houses.iterrows():
             ["property_id"],
             "properties_homes_internet_availability_link"
         )
+        homes_chorus_link.clear()
+
     if not (valve_1 and valve_2 and valve_3):
         logging.warning("Chorus API reaches daily limit and won't reset shortly, stop.")
         break
@@ -209,3 +211,4 @@ upsert_dataframe(
     ["property_id"],
     "properties_homes_internet_availability_link"
 )
+homes_chorus_link.clear()
