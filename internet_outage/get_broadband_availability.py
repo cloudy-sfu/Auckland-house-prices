@@ -1,3 +1,5 @@
+import numpy as np
+from thefuzz import fuzz
 import json
 import logging
 import os
@@ -113,7 +115,14 @@ for i, row in houses.iterrows():
         valve_1 = rate_limit(response.headers)
         response_json = response.json()
         assert response_json['results'], "Chorus cannot find AID of this address."
-        aid = response_json['results'][0]['aid']
+        results = response_json['results']
+        if len(results) > 1:
+            addresses = [a['label'] for a in results]
+            scores = [fuzz.ratio(address, cand_address) for cand_address in addresses]
+            best_address_idx = np.argmax(scores)
+            aid = response_json['results'][best_address_idx]['aid']
+        else:
+            aid = response_json['results'][0]['aid']
         if not valve_1:
             # the next step will use the same API again, so quit when reached the limit
             continue
@@ -163,17 +172,19 @@ for i, row in houses.iterrows():
 
         # %% Parse the best available service.
         response_json = response.json()
-        assert response_json['success'], \
-            f"Chorus raises status code {response_json['statusCode']}."
-        services = pd.DataFrame(response_json['available_services'])
-        services = services.loc[services['capable'] == 'YES', :]
-        if services.empty:
+        if response_json['success']:
+            services = pd.DataFrame(response_json['available_services'])
+            services = services.loc[services['capable'] == 'YES', :]
+            if services.empty:
+                service_name = pd.NA
+                max_speed = pd.NA
+            else:
+                services_b = services.iloc[services['speed_mbps'].argmax()]
+                max_speed = services_b['speed_mbps']
+                service_name = services_b['service']
+        else:
             service_name = pd.NA
             max_speed = pd.NA
-        else:
-            services_b = services.iloc[services['speed_mbps'].argmax()]
-            max_speed = services_b['speed_mbps']
-            service_name = services_b['service']
     except Exception as e:
         logging.warning(f"Fail to parse broadband information of \"{address}\". "
                         f"{type(e).__name__}: {e}")
