@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict sdLfLWn3uaXMNjp7j22Wee9tvi8tREGHw3LABgSJd7xvuHTK0ASe14rh7WXVgS3
+\restrict KpYpuRZKTwbyRM3V8tTaaL1boBYIbHU3qUEdOycEfWBX9JFDtrYZA5PYKZ6Y4kH
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -91,6 +91,20 @@ CREATE TABLE public.crimes (
     robbery integer,
     sexual_offence integer,
     theft integer
+);
+
+
+--
+-- Name: flood_area; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.flood_area (
+    sde_object_id integer NOT NULL,
+    year_produced smallint,
+    area double precision,
+    geometry jsonb,
+    flood_type character varying(20),
+    published_date date
 );
 
 
@@ -406,41 +420,6 @@ COMMENT ON COLUMN public.properties_land_tax.assessment_id IS 'Auckland council 
 
 
 --
--- Name: properties_state_houses; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.properties_state_houses (
-    parcel_id integer NOT NULL,
-    record_of_title character varying(16),
-    owner character varying(64),
-    area double precision,
-    updated_date date,
-    geometry jsonb
-);
-
-
---
--- Name: properties_state_houses_new_dev; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.properties_state_houses_new_dev (
-    info_marker_id integer NOT NULL,
-    local_board character varying(64),
-    address character varying(256),
-    land_area integer,
-    build_type character varying(256),
-    number_of_homes character varying(64),
-    parking_space character varying(32),
-    progress character varying(32),
-    planned_completion character varying(32),
-    location jsonb,
-    step character varying(32),
-    updated_year smallint,
-    updated_month smallint
-);
-
-
---
 -- Name: properties_trademe; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -551,6 +530,41 @@ COMMENT ON COLUMN public.schools.lang_pacific IS 'Some students are tanght in Pa
 
 
 --
+-- Name: state_houses; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.state_houses (
+    parcel_id integer NOT NULL,
+    record_of_title character varying(16),
+    owner character varying(64),
+    area double precision,
+    updated_date date,
+    geometry jsonb
+);
+
+
+--
+-- Name: state_houses_new_dev; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.state_houses_new_dev (
+    info_marker_id integer NOT NULL,
+    local_board character varying(64),
+    address character varying(256),
+    land_area integer,
+    build_type character varying(256),
+    number_of_homes character varying(64),
+    parking_space character varying(32),
+    progress character varying(32),
+    planned_completion character varying(32),
+    location jsonb,
+    step character varying(32),
+    updated_year smallint,
+    updated_month smallint
+);
+
+
+--
 -- Name: suburbs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -594,6 +608,14 @@ ALTER TABLE ONLY public.crawler_collect_trademe ALTER COLUMN id SET DEFAULT next
 
 ALTER TABLE ONLY public.crimes
     ADD CONSTRAINT crimes_pk PRIMARY KEY (suburb_id, year, month);
+
+
+--
+-- Name: flood_area flood_area_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.flood_area
+    ADD CONSTRAINT flood_area_pk PRIMARY KEY (sde_object_id);
 
 
 --
@@ -701,22 +723,6 @@ ALTER TABLE ONLY public.properties_trademe
 
 
 --
--- Name: properties_state_houses_new_dev properties_state_houses_new_dev_pk; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_state_houses_new_dev
-    ADD CONSTRAINT properties_state_houses_new_dev_pk PRIMARY KEY (info_marker_id);
-
-
---
--- Name: properties_state_houses properties_state_houses_pk; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.properties_state_houses
-    ADD CONSTRAINT properties_state_houses_pk PRIMARY KEY (parcel_id);
-
-
---
 -- Name: properties_homes_detail property_homes_detail_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -730,6 +736,22 @@ ALTER TABLE ONLY public.properties_homes_detail
 
 ALTER TABLE ONLY public.schools
     ADD CONSTRAINT schools_pk PRIMARY KEY (school_number);
+
+
+--
+-- Name: state_houses_new_dev state_houses_new_dev_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.state_houses_new_dev
+    ADD CONSTRAINT state_houses_new_dev_pk PRIMARY KEY (info_marker_id);
+
+
+--
+-- Name: state_houses state_houses_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.state_houses
+    ADD CONSTRAINT state_houses_pk PRIMARY KEY (parcel_id);
 
 
 --
@@ -760,5 +782,5 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict sdLfLWn3uaXMNjp7j22Wee9tvi8tREGHw3LABgSJd7xvuHTK0ASe14rh7WXVgS3
+\unrestrict KpYpuRZKTwbyRM3V8tTaaL1boBYIbHU3qUEdOycEfWBX9JFDtrYZA5PYKZ6Y4kH
 

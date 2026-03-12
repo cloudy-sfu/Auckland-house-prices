@@ -23,7 +23,7 @@ logging.basicConfig(
 
 # %% Initialization.
 session = Session()
-with open("properties/header_2.json") as f:
+with open("state_houses/header_2.json") as f:
     header = json.load(f)
 
 
@@ -203,7 +203,7 @@ try:
         engine,
         state_houses,
         ['info_marker_id'],
-        "properties_state_houses_new_dev"
+        "state_houses_new_dev"
     )
 except Exception as e:
     logging.info(f"Number of records: {state_houses.shape[0]}\n"

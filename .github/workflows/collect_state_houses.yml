@@ -1,4 +1,4 @@
-name: Collect state houses
+name: Collect state houses - Kainga Ora & Land Information NZ
 
 on:
   schedule:
@@ -11,7 +11,7 @@ jobs:
 
     env:
       NEON_DB: ${{ secrets.NEON_DB }}
-      PYTHONPATH: . 
+      PYTHONPATH: .
 
     steps:
       - name: Checkout code
@@ -29,5 +29,5 @@ jobs:
 
       - name: Run the script
         run: |
-          python properties/get_state_houses_new_dev.py
-          python properties/get_state_houses_existed.py
+          python state_houses/get_state_houses_existed.py
+          python state_houses/get_state_houses_new_dev.py

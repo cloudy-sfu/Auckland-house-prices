@@ -1,4 +1,4 @@
-name: Collect crime count - Crime Stats NZ
+name: Collect flood area - Auckland Council
 
 on:
   schedule:
@@ -11,7 +11,7 @@ jobs:
 
     env:
       NEON_DB: ${{ secrets.NEON_DB }}
-      PYTHONPATH: .
+      PYTHONPATH: . 
 
     steps:
       - name: Checkout code
@@ -29,9 +29,4 @@ jobs:
 
       - name: Run the script
         run: |
-          python crime/check_suburbs.py
-          check_suburbs_result=$?
-          if [ "$check_suburbs_result" -eq 3 ]; then
-              python population/suburbs.py
-          fi
-          python crime/get_crime.py
+          python flood/get_flood_area.py

@@ -110,5 +110,5 @@ upsert_dataframe(
     engine,
     records,
     ['parcel_id'],
-    'properties_state_houses',
+    'state_houses',
 )
