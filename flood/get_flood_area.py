@@ -152,6 +152,7 @@ for layer_name, item_id in FLOOD_LAYERS.items():
             "Published_Date": "published_date",
             "Shape__Area": "area",
         }, inplace=True)
+        records.drop_duplicates(subset=['sde_object_id'], inplace=True)
 
         # %% Export.
         upsert_dataframe(
