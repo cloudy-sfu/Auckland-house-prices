@@ -142,7 +142,10 @@ for layer_name, item_id in FLOOD_LAYERS.items():
         records = pd.DataFrame(records)
         records = records.convert_dtypes()
         records['flood_type'] = layer_name
-        records['Published_Date'] = pd.to_datetime(records['Published_Date'], unit='ms')
+        records['Published_Date'] = (pd.to_datetime(records['Published_Date'], unit='ms')
+                                     .dt.date.replace(pd.NaT, pd.NA))
+        records['YEAR_PRODUCED'] = pd.to_numeric(
+            records['YEAR_PRODUCED'], downcast='integer', errors='coerce')
         records.rename(columns={
             "SDEObjectID": "sde_object_id",
             "YEAR_PRODUCED": "year_produced",
