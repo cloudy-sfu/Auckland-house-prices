@@ -21,10 +21,6 @@ script_start_time = pd.Timestamp('now', tz='UTC')
 session = Session()
 with open("properties/header_council.json") as f:
     header = json.load(f)
-header_1 = header.copy()
-header_1['referer'] = ("https://www.aucklandcouncil.govt.nz/en/property-rates-valuations/"
-                       "find-property-rates-valuation.html")
-header_1['host'] = "www.aucklandcouncil.govt.nz"
 engine = create_engine(os.environ['NEON_DB'], poolclass=NullPool)
 
 # %% Get address to fetch.
@@ -101,9 +97,9 @@ for i, row in houses.iterrows():
     try:
         # %% Get land information.
         response = session.get(
-            f"https://www.aucklandcouncil.govt.nz/nextapi/property/"
+            f"https://experience.aucklandcouncil.govt.nz/nextapi/property/"
             f"{assessment_id}/rate-assessment",
-            headers=header_1,
+            headers=header,
         )
         response.raise_for_status()
         assessment = response.json()
