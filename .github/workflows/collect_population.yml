@@ -2,7 +2,7 @@ name: Collect population - Infometrics
 
 on:
   schedule:
-    - cron: '0 0 10 8 *'  # Every year August 10th 0:00 UTC
+    - cron: '0 0 1 1 *'  # Once every year
   workflow_dispatch:
 
 jobs:

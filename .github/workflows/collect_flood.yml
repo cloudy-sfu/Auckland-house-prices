@@ -2,7 +2,7 @@ name: Collect flood area - Auckland Council
 
 on:
   schedule:
-    - cron: '0 8 20 * *'  # 20th every month 8:00 UTC
+    - cron: '0 0 1 1 *'  # Once every year
   workflow_dispatch:
 
 jobs:
@@ -29,4 +29,5 @@ jobs:
 
       - name: Run the script
         run: |
-          python flood/get_flood_area.py
+          python flood/get_flood_plains.py
+          python flood/get_flood_prone_areas.py

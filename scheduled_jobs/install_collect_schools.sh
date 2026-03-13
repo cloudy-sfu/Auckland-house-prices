@@ -19,8 +19,8 @@ EOF
 chmod +x "$JOB_SCRIPT_PATH"
 
 # Register job in crontab
-# Every year December 1st 0:00 UTC+12/UTC+13
-CRON_JOB="0 0 1 12 * $JOB_SCRIPT_PATH"
+# Once every year
+CRON_JOB="0 0 1 1 * $JOB_SCRIPT_PATH"
 # Ref: https://man7.org/linux/man-pages/man1/crontab.1.html
 (crontab -l 2>/dev/null | grep -v "$JOB_SCRIPT_PATH"; echo "$CRON_JOB") | crontab -
 
