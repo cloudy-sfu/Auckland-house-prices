@@ -10,15 +10,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output, callback, no_update, ctx
 from shapely.geometry import shape
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, NullPool
 
 # --- 1. Database & Data Functions ---
-
-db_connection_str = os.environ.get("NEON_DB")
-if not db_connection_str:
-    raise ValueError("NEON_DB environment variable is not set.")
-
-engine = create_engine(db_connection_str)
+engine = create_engine(os.environ.get("NEON_DB"), poolclass=NullPool)
 
 with open("crime/get_crime_total.sql") as f:
     sql_crime_totals = f.read()

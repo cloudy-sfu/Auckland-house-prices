@@ -6,15 +6,10 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output, callback, no_update, ctx
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, NullPool
 
 # --- 1. Database & Data Functions ---
-
-db_connection_str = os.environ.get("NEON_DB")
-if not db_connection_str:
-    raise ValueError("NEON_DB environment variable is not set.")
-
-engine = create_engine(db_connection_str)
+engine = create_engine(os.environ.get("NEON_DB"), poolclass=NullPool)
 with open("fuel/get_latest_fuel_price.sql") as f:
     sql_latest_price = f.read()
 with open("fuel/get_fuel_price.sql") as f:
