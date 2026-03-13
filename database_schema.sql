@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict KpYpuRZKTwbyRM3V8tTaaL1boBYIbHU3qUEdOycEfWBX9JFDtrYZA5PYKZ6Y4kH
+\restrict eQsh8GRJJhdu3aKXdJFco36OiuvyGY2ZTzy6saNptLkQhxeYunsmgEc8BahvAml
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -95,16 +95,55 @@ CREATE TABLE public.crimes (
 
 
 --
--- Name: flood_area; Type: TABLE; Schema: public; Owner: -
+-- Name: flood_coastal_inundation; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.flood_area (
+CREATE TABLE public.flood_coastal_inundation (
+    object_id integer NOT NULL,
+    geometry jsonb
+);
+
+
+--
+-- Name: flood_flood_plains; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.flood_flood_plains (
     sde_object_id integer NOT NULL,
     year_produced smallint,
     area double precision,
     geometry jsonb,
-    flood_type character varying(20),
     published_date date
+);
+
+
+--
+-- Name: flood_flood_prone_areas; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.flood_flood_prone_areas (
+    fpa_id integer NOT NULL,
+    catchment_area integer,
+    pounding_depth_100yr double precision,
+    pounding_depth_spill double precision,
+    lowest_ground_elevation double precision,
+    rainfall_100yr smallint,
+    rainfall_spill smallint,
+    runoff_volume integer,
+    capacity_volume integer,
+    area double precision,
+    geometry jsonb
+);
+
+
+--
+-- Name: flood_overland_flow_paths; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.flood_overland_flow_paths (
+    global_id uuid NOT NULL,
+    catchment_contributing_area smallint,
+    geometry jsonb
 );
 
 
@@ -611,11 +650,35 @@ ALTER TABLE ONLY public.crimes
 
 
 --
--- Name: flood_area flood_area_pk; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: flood_coastal_inundation flood_coastal_inundation_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.flood_area
-    ADD CONSTRAINT flood_area_pk PRIMARY KEY (sde_object_id);
+ALTER TABLE ONLY public.flood_coastal_inundation
+    ADD CONSTRAINT flood_coastal_inundation_pk PRIMARY KEY (object_id);
+
+
+--
+-- Name: flood_flood_plains flood_flood_plains_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.flood_flood_plains
+    ADD CONSTRAINT flood_flood_plains_pk PRIMARY KEY (sde_object_id);
+
+
+--
+-- Name: flood_flood_prone_areas flood_flood_prone_areas_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.flood_flood_prone_areas
+    ADD CONSTRAINT flood_flood_prone_areas_pk PRIMARY KEY (fpa_id);
+
+
+--
+-- Name: flood_overland_flow_paths flood_overland_flow_paths_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.flood_overland_flow_paths
+    ADD CONSTRAINT flood_overland_flow_paths_pk PRIMARY KEY (global_id);
 
 
 --
@@ -782,5 +845,5 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict KpYpuRZKTwbyRM3V8tTaaL1boBYIbHU3qUEdOycEfWBX9JFDtrYZA5PYKZ6Y4kH
+\unrestrict eQsh8GRJJhdu3aKXdJFco36OiuvyGY2ZTzy6saNptLkQhxeYunsmgEc8BahvAml
 
