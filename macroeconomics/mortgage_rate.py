@@ -3,7 +3,7 @@ import os
 from sqlalchemy import create_engine
 
 from macroeconomics.get_interest import *
-from postgresql_upsert import upsert_dataframe
+from postgresql_upsert import insert_if_not_exists
 
 chart_id, series_names_raw = get_chart_and_series(
     "https://www.interest.co.nz/charts/interest-rates/mortgage-rates"
@@ -27,8 +27,9 @@ for col_name, series_idx in series_renamer.items():
     mortgage.append(mortgage_per)
 mortgage = pd.concat(mortgage, axis=1)
 mortgage.reset_index(inplace=True)
+mortgage = mortgage.convert_dtypes()
 engine = create_engine(os.environ['NEON_DB'])
-upsert_dataframe(  # upsert because there are multiple time series
+insert_if_not_exists(  # upsert because there are multiple time series
     engine, mortgage,
     ["date"],
     "macroeconomics_mortgage_rate"

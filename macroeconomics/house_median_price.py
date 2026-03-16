@@ -12,6 +12,7 @@ all_data = get_chart_data(chart_id)
 
 ocr_idx = get_series_idx(series_names, r"^Auckland$")
 ocr = list_to_df(all_data[ocr_idx], 'month')
+ocr = ocr.convert_dtypes()
 engine = create_engine(os.environ['NEON_DB'])
 insert_if_not_exists(
     engine, ocr,
