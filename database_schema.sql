@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict eQsh8GRJJhdu3aKXdJFco36OiuvyGY2ZTzy6saNptLkQhxeYunsmgEc8BahvAml
+\restrict VIlbXhfJzvhKDJ9AqziU6Ft6aoQXbkTSAYnnIfs1HJ4JUb717X2nYz4VdWVhwTj
 
 -- Dumped from database version 17.8 (6108b59)
 -- Dumped by pg_dump version 17.7
@@ -349,6 +349,22 @@ COMMENT ON TABLE public.macroeconomics_ocr IS 'NZ official cash rates';
 --
 
 COMMENT ON COLUMN public.macroeconomics_ocr.date IS 'Announced date';
+
+
+--
+-- Name: macroeconomics_wholesale_swap_rate; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.macroeconomics_wholesale_swap_rate (
+    date date NOT NULL,
+    _1_years double precision,
+    _2_years double precision,
+    _3_years double precision,
+    _4_years double precision,
+    _5_years double precision,
+    _7_years double precision,
+    _10_years double precision
+);
 
 
 --
@@ -738,6 +754,14 @@ ALTER TABLE ONLY public.macroeconomics_ocr
 
 
 --
+-- Name: macroeconomics_wholesale_swap_rate macroeconomics_wholesale_swap_rate_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.macroeconomics_wholesale_swap_rate
+    ADD CONSTRAINT macroeconomics_wholesale_swap_rate_pk PRIMARY KEY (date);
+
+
+--
 -- Name: population population_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -845,5 +869,5 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict eQsh8GRJJhdu3aKXdJFco36OiuvyGY2ZTzy6saNptLkQhxeYunsmgEc8BahvAml
+\unrestrict VIlbXhfJzvhKDJ9AqziU6Ft6aoQXbkTSAYnnIfs1HJ4JUb717X2nYz4VdWVhwTj
 

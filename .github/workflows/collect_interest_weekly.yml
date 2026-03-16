@@ -31,3 +31,4 @@ jobs:
         run: |
           python macroeconomics/ocr.py
           python macroeconomics/mortgage_rate.py
+          python macroeconomics/wholesale_swap_rate.py
