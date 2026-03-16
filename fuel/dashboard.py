@@ -1,6 +1,7 @@
 import os
 import socket
 import urllib.parse
+from datetime import datetime, timedelta
 
 import pandas as pd
 import plotly.express as px
@@ -10,10 +11,14 @@ from sqlalchemy import create_engine, text, NullPool
 
 # --- 1. Database & Data Functions ---
 engine = create_engine(os.environ.get("NEON_DB"), poolclass=NullPool)
+
 with open("fuel/get_latest_fuel_price.sql") as f:
     sql_latest_price = f.read()
 with open("fuel/get_fuel_price.sql") as f:
     sql_price_per_station = f.read()
+with open("fuel/fuel_prices_city_type_daily_hist.sql") as f:
+    sql_daily_hist = f.read()
+
 
 def get_latest_prices(fuel_type):
     query = text(sql_latest_price)
@@ -97,6 +102,14 @@ app.index_string = '''
                 overflow: hidden; 
                 font-family: Arial, sans-serif;
             }
+            .DateRangePickerInput {
+                height: unset !important;
+            }
+            .DateInput_input {
+                padding: 4px 8px !important;
+                font-size: unset !important;
+                height: unset !important;
+            }
         </style>
     </head>
     <body>
@@ -118,7 +131,6 @@ initial_fuel = fuel_types[0] if fuel_types else None
 
 def generate_map_figure(fuel_type):
     fig = go.Figure()
-
     lat_center, lon_center = -40.9, 174.8
     zoom_level = 5
 
@@ -136,7 +148,6 @@ def generate_map_figure(fuel_type):
                 height=None
             )
 
-            # FIX: Removed 'line' property which causes the crash in scatter_map
             fig.update_traces(
                 hoverinfo='none',
                 hovertemplate=None,
@@ -177,8 +188,13 @@ def layout_map():
 
     return html.Div([
         html.Div([
-            html.H4("Fuel Price Dashboard", style={'marginTop': 0}),
-            html.Label("Select Fuel Type:"),
+            html.H4("Fuel Price Dashboard",
+                    style={'marginTop': 0, 'marginBottom': '5px'}),
+            html.A("Distribution of fuel price over time", href="/distribution",
+                   target="_blank",
+                   style={'display': 'block', 'marginBottom': '15px', 'color': 'blue',
+                          'textDecoration': 'underline', 'fontSize': '14px'}),
+            html.Label("Fuel type:"),
             dcc.Dropdown(
                 id='fuel-type-dropdown',
                 options=[{'label': ft, 'value': ft} for ft in fuel_types],
@@ -232,7 +248,8 @@ def layout_history(station_id):
     else:
         fig = px.line(
             df, x="update_time", y="price", color="fuel_type",
-            line_shape="hv", markers=True, title=f"Price History: {station_name} (NZ cents/L)"
+            line_shape="hv", markers=True,
+            title=f"Price History: {station_name} (NZ cents/L)"
         )
         fig.update_layout(font={'family': 'Arial'})
 
@@ -240,6 +257,76 @@ def layout_history(station_id):
         html.H2(station_name),
         dcc.Graph(figure=fig, style={'height': '85vh'})
     ], style=history_page_style)
+
+
+def layout_distribution():
+    dist_page_style = {
+        'overflowY': 'auto',
+        'height': '100vh',
+        'width': '100vw',
+        'boxSizing': 'border-box',
+        'padding': '20px',
+        'fontFamily': 'Arial, sans-serif'
+    }
+
+    today = datetime.now()
+    default_start = (today - timedelta(days=30)).strftime('%Y-%m-%d')
+    default_end = today.strftime('%Y-%m-%d')
+
+    return html.Div([
+        html.H2("Daily Probability Distribution of Fuel Prices"),
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.Label("Date Range:"),
+                        dcc.DatePickerRange(
+                            id='dist-date-picker',
+                            start_date=default_start,
+                            end_date=default_end,
+                            display_format='YYYY-MM-DD'
+                        )
+                    ],
+                    style={
+                        'display': 'flex',
+                        'flexDirection': 'column',
+                    }
+                ),
+
+                html.Div(
+                    [
+                        html.Label("Fuel type:"),
+                        dcc.Dropdown(id='dist-fuel-dropdown', style={'width': '200px'})
+                    ],
+                    style={
+                        'display': 'flex',
+                        'flexDirection': 'column',
+                    }
+                ),
+
+                html.Div(
+                    [
+                        html.Label("City:"),
+                        dcc.Dropdown(id='dist-city-dropdown', style={'width': '200px'})
+                    ],
+                    style={
+                        'display': 'flex',
+                        'flexDirection': 'column',
+                    }
+                ),
+            ],
+            style={
+                'marginBottom': '20px',
+                'display': 'flex',
+                'gap': '20px',
+                'alignItems': 'flex-end'
+            }
+        ),
+
+        # We use a store to avoid fetching DB multiple times per interaction
+        dcc.Store(id='dist-data-store'),
+        dcc.Graph(id='dist-graph', style={'height': '75vh'})
+    ], style=dist_page_style)
 
 
 # --- 6. Callbacks ---
@@ -254,6 +341,8 @@ def display_page(pathname, search):
             parsed = urllib.parse.parse_qs(search.lstrip('?'))
             station_id = parsed.get('id', [None])[0]
         return layout_history(station_id)
+    elif pathname == '/distribution':
+        return layout_distribution()
     else:
         return layout_map()
 
@@ -307,20 +396,85 @@ def handle_map_interaction(clickData, close_clicks):
 
     style = DETAIL_CARD_STYLE.copy()
     style['display'] = 'block'
-
     history_href = f"/history?id={station_id}"
 
     return style, name, content, history_href
 
 
+@callback(
+    Output('dist-data-store', 'data'),
+    Input('dist-date-picker', 'start_date'),
+    Input('dist-date-picker', 'end_date')
+)
+def fetch_distribution_data(start_date, end_date):
+    if not start_date or not end_date:
+        return []
+
+    # Append TZ to match the existing hard-coded logic behavior
+    start_str = f"{start_date} 00:00:00+13"
+    end_str = f"{end_date} 00:00:00+13"
+
+    query = text(sql_daily_hist)
+    df = pd.read_sql(query, engine, params={"start_date": start_str, "end_date": end_str})
+
+    # Serialize date
+    if not df.empty:
+        df['price_date'] = df['price_date'].astype(str)
+
+    return df.to_dict('records')
+
+
+@callback(
+    Output('dist-fuel-dropdown', 'options'),
+    Output('dist-fuel-dropdown', 'value'),
+    Output('dist-city-dropdown', 'options'),
+    Output('dist-city-dropdown', 'value'),
+    Output('dist-graph', 'figure'),
+    Input('dist-data-store', 'data'),
+    Input('dist-fuel-dropdown', 'value'),
+    Input('dist-city-dropdown', 'value'),
+    prevent_initial_call=False
+)
+def update_distribution_ui(data, selected_fuel, selected_city):
+    if not data:
+        return [], None, [], None, go.Figure()
+
+    df = pd.DataFrame(data)
+    fuels = df['fuel_type'].unique().tolist()
+    cities = df['city'].unique().tolist()
+
+    # Use first available options if current selections aren't valid for the date range
+    fuel_val = selected_fuel if selected_fuel in fuels else (fuels[0] if fuels else None)
+    city_val = selected_city if selected_city in cities else (
+        cities[0] if cities else None)
+
+    filtered_df = df[(df['fuel_type'] == fuel_val) & (df['city'] == city_val)].copy()
+
+    if filtered_df.empty:
+        fig = go.Figure().update_layout(title="No data available")
+    else:
+        # Reconstruct sample-based structure required for violin distributions since Plotly Violin computes KDE from raw points.
+        # Approximating raw distribution size by scaling density (e.g., density * 1000 items)
+        filtered_df['sample_weight'] = (
+            (filtered_df['probability_density'] * 1000).astype(int))
+        raw_dist_df = filtered_df.loc[
+            filtered_df.index.repeat(filtered_df['sample_weight'])]
+
+        fig = px.violin(
+            raw_dist_df,
+            x="price_date",
+            y="price_bucket_start",
+            title=f"Price Distribution: {fuel_val} in {city_val}",
+            labels={"price_date": "Date",
+                    "price_bucket_start": "Price Bucket (NZ Cents)"},
+            box=False,
+            points="outliers",
+        )
+
+    return fuels, fuel_val, cities, city_val, fig
+
+
 def find_available_port(start_port: int, tries: int = 100):
-    """
-    Find the first available port from {start_port} to {start_port + tries}
-    :param start_port: The port that the program starts to scan, if it's occupied, the
-    program will scan {start_port + 1}. If it's occupied again, try the next one...
-    :param tries: Default 100, the maximum trying times from the start port.
-    :return:
-    """
     for i in range(tries):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
