@@ -7,10 +7,10 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output, callback, no_update, ctx
-from sqlalchemy import create_engine, text, NullPool
+from sqlalchemy import create_engine, text
 
 # --- 1. Database & Data Functions ---
-engine = create_engine(os.environ.get("NEON_DB"), poolclass=NullPool)
+engine = create_engine(os.environ.get("NEON_DB"), pool_recycle=300)
 
 with open("fuel/get_latest_fuel_price.sql") as f:
     sql_latest_price = f.read()

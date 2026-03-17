@@ -8,7 +8,7 @@ from math import ceil
 
 import pandas as pd
 from requests import Session
-from sqlalchemy import create_engine, NullPool
+from sqlalchemy import create_engine
 
 from postgresql_upsert import upsert_dataframe
 
@@ -86,7 +86,7 @@ n_records = response.json()["count"]
 n_pages = ceil(n_records / batch_size)
 
 # %% Paginate through all records
-engine = create_engine(os.environ['NEON_DB'], poolclass=NullPool)
+engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
 for page in range(n_pages):
     records = []
     start_time = pd.Timestamp('now', tz='UTC')

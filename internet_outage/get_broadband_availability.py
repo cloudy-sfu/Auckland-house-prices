@@ -1,5 +1,3 @@
-import numpy as np
-from thefuzz import fuzz
 import json
 import logging
 import os
@@ -9,10 +7,11 @@ import time
 import uuid
 from math import ceil
 
+import numpy as np
 import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
+from thefuzz import fuzz
 
 from postgresql_upsert import upsert_dataframe
 
@@ -25,7 +24,7 @@ logging.basicConfig(
 )
 script_start_time = pd.Timestamp('now', tz='UTC')
 session = Session()
-engine = create_engine(os.environ['NEON_DB'], poolclass=NullPool)
+engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
 
 
 def rate_limit(header_):

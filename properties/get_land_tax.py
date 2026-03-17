@@ -6,7 +6,6 @@ import sys
 import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
 
 from postgresql_upsert import upsert_dataframe, insert_if_not_exists
 
@@ -21,7 +20,7 @@ script_start_time = pd.Timestamp('now', tz='UTC')
 session = Session()
 with open("properties/header_council.json") as f:
     header = json.load(f)
-engine = create_engine(os.environ['NEON_DB'], poolclass=NullPool)
+engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
 
 # %% Get address to fetch.
 with open("properties/homes_no_land_tax_record.sql") as f:

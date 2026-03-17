@@ -4,7 +4,7 @@ import sys
 
 import pandas as pd
 from requests import Session
-from sqlalchemy import create_engine, NullPool, text
+from sqlalchemy import create_engine, text
 
 from postgresql_upsert import upsert_dataframe
 
@@ -26,7 +26,7 @@ end_month = (now.month - 2) % 12 + 1
 # %% Get start year & month for each suburb.
 with open("crime/crime_start_year_month.sql") as f:
     sql_start_year_month = f.read()
-engine = create_engine(os.environ['NEON_DB'], poolclass=NullPool)
+engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
 with engine.connect() as c:
     start_year_month = pd.read_sql(sql=text(sql_start_year_month), con=c)
 start_year_month = start_year_month.convert_dtypes()

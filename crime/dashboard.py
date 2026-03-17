@@ -10,10 +10,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output, callback, no_update, ctx
 from shapely.geometry import shape
-from sqlalchemy import create_engine, text, NullPool
+from sqlalchemy import create_engine, text
 
 # --- 1. Database & Data Functions ---
-engine = create_engine(os.environ.get("NEON_DB"), poolclass=NullPool)
+engine = create_engine(os.environ.get("NEON_DB"), pool_recycle=300)
 
 with open("crime/get_crime_total.sql") as f:
     sql_crime_totals = f.read()

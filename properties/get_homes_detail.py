@@ -6,7 +6,7 @@ import sys
 import pandas as pd
 from pandas._libs.tslibs.np_datetime import OutOfBoundsDatetime
 from requests import Session
-from sqlalchemy import create_engine, NullPool
+from sqlalchemy import create_engine
 
 from postgresql_upsert import upsert_dataframe
 
@@ -25,7 +25,7 @@ with open("properties/homes_no_detail.sql") as f:
     sql_no_detail = f.read()
 
 # %% Load listings to work on.
-engine = create_engine(os.environ['NEON_DB'], poolclass=NullPool)
+engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
 with engine.connect() as c:
     properties = pd.read_sql(sql_no_detail, c)
 logging.info(f"Total number of properties to query details: {properties.shape[0]}")
