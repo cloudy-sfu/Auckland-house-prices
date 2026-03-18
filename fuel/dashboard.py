@@ -102,14 +102,6 @@ app.index_string = '''
                 overflow: hidden; 
                 font-family: Arial, sans-serif;
             }
-            .DateRangePickerInput {
-                height: unset !important;
-            }
-            .DateInput_input {
-                padding: 4px 8px !important;
-                font-size: unset !important;
-                height: unset !important;
-            }
         </style>
     </head>
     <body>
@@ -279,7 +271,7 @@ def layout_distribution():
             [
                 html.Div(
                     [
-                        html.Label("Date Range:"),
+                        html.Label("Date range:"),
                         dcc.DatePickerRange(
                             id='dist-date-picker',
                             start_date=default_start,
@@ -287,10 +279,6 @@ def layout_distribution():
                             display_format='YYYY-MM-DD'
                         )
                     ],
-                    style={
-                        'display': 'flex',
-                        'flexDirection': 'column',
-                    }
                 ),
 
                 html.Div(
@@ -298,10 +286,6 @@ def layout_distribution():
                         html.Label("Fuel type:"),
                         dcc.Dropdown(id='dist-fuel-dropdown', style={'width': '200px'})
                     ],
-                    style={
-                        'display': 'flex',
-                        'flexDirection': 'column',
-                    }
                 ),
 
                 html.Div(
@@ -309,10 +293,6 @@ def layout_distribution():
                         html.Label("City:"),
                         dcc.Dropdown(id='dist-city-dropdown', style={'width': '200px'})
                     ],
-                    style={
-                        'display': 'flex',
-                        'flexDirection': 'column',
-                    }
                 ),
             ],
             style={
