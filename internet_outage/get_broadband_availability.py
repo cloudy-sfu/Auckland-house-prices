@@ -66,6 +66,7 @@ logging.info(f"Total number of houses to check broadband availability: {houses.s
 records = []
 homes_chorus_link = []
 valve_1 = valve_2 = valve_3 = True
+detail_continuous_failure_count = 0
 for i, row in houses.iterrows():
     address = row['address']
 
@@ -101,6 +102,10 @@ for i, row in houses.iterrows():
     now = pd.Timestamp('now', tz='UTC')
     if now - script_start_time > pd.Timedelta(hours=5, minutes=45):
         logging.warning("Execution time reaches 5 hours and 45 minutes, stop.")
+        break
+
+    if detail_continuous_failure_count > 30:
+        logging.error("Continuous failing to parse detail page for 30 times, stop.")
         break
 
     try:
@@ -187,8 +192,10 @@ for i, row in houses.iterrows():
     except Exception as e:
         logging.warning(f"Fail to parse broadband information of \"{address}\". "
                         f"{type(e).__name__}: {e}")
+        detail_continuous_failure_count += 1
         continue
 
+    detail_continuous_failure_count = 0
     records.append({
         "tlc": tlc,
         "unit": structured_address_raw.get('unit'),
