@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import secrets
 import sys
 import time
 import uuid
@@ -24,6 +23,11 @@ logging.basicConfig(
 )
 script_start_time = pd.Timestamp('now', tz='UTC')
 session = Session()
+if os.environ.get("CHORUS_HTTP_PROXY"):
+    session.proxies = {
+        "http": os.environ['CHORUS_HTTP_PROXY'],
+        "https": os.environ['CHORUS_HTTP_PROXY'],
+    }
 engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
 
 
@@ -54,6 +58,8 @@ with open("internet_outage/chorus_address_look_up.json") as f:
 header_address['x-transaction-id'] = str(uuid.uuid4())
 with open("internet_outage/chorus_broadband_availability.json") as f:
     header_availability = json.load(f)
+with open("internet_outage/chorus_broadband_availability_bcc.json") as f:
+    header_availability_1 = json.load(f)
 
 # %% Get address to fetch.
 with open("internet_outage/homes_no_chorus.sql") as f:
@@ -158,15 +164,6 @@ for i, row in houses.iterrows():
 
     try:
         # %% Get available service.
-        sentry_trace_id = uuid.uuid4().hex
-        sentry_span_id = secrets.token_hex(8)
-        baggage = (f"sentry-environment=production,sentry-release=public-website-frontend"
-                   f"%402.1.40,sentry-public_key=6d1e0cc8e0964ad2a39a4ced25ee0b3c,"
-                   f"sentry-trace_id={sentry_trace_id}")
-        header_availability_1 = header_availability.copy()
-        header_availability_1['baggage'] = baggage
-        header_availability_1['sentry-trace'] = f"{sentry_trace_id}-{sentry_span_id}"
-
         response = session.get(
             f"https://www.chorus.co.nz/api/bbc/bcc/{tlc}",
             headers=header_availability_1

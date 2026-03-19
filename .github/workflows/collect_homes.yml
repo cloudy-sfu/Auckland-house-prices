@@ -11,7 +11,8 @@ jobs:
 
     env:
       NEON_DB: ${{ secrets.NEON_DB }}
-      PYTHONPATH: . 
+      PYTHONPATH: .
+      CHORUS_HTTP_PROXY: ${{ secrets.CHORUS_HTTP_PROXY }}
 
     steps:
       - name: Checkout code

@@ -52,11 +52,12 @@ Manually run each scheduled job once, to initially save data into database and e
 
 Add the following variables into GitHub repository settings "Secrets and variables > Actions > Secrets > Repository secrets".
 
-| Used by             | Variable       | Description                         |
-| ------------------- | -------------- | ----------------------------------- |
-| (All)               | NEON_DB        | Connection string to Neon database. |
-| `collect_gaspy.yml` | GASPY_EMAIL    | Email of "gaspy" account.           |
-| `collect_gaspy.yml` | GASPY_PASSWORD | Password of "gaspy" account.        |
+| Used by             | Variable          | Description                                 |
+| ------------------- | ----------------- | ------------------------------------------- |
+| (All)               | NEON_DB           | Connection string to Neon database.         |
+| `collect_gaspy.yml` | GASPY_EMAIL       | Email of "gaspy" account.                   |
+| `collect_gaspy.yml` | GASPY_PASSWORD    | Password of "gaspy" account.                |
+| `collect_homes.yml` | CHORUS_HTTP_PROXY | HTTP proxy URL to request data from Chorus. |
 
 
 
