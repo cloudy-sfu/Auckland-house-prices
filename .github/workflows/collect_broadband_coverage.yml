@@ -1,8 +1,8 @@
-name: Collect broadband outage - Chorus
+name: Collect broadband coverage - Chorus
 
 on:
   schedule:
-    - cron: '0 10 * * *'
+    - cron: '0 0 1 1 *'  # Once every year
   workflow_dispatch:
 
 jobs:
@@ -29,4 +29,4 @@ jobs:
 
       - name: Run the script
         run: |
-          python broadband/get_chorus_outage.py
+          python broadband/get_broadband_coverage.py

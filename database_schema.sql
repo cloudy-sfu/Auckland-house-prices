@@ -2,9 +2,9 @@
 -- PostgreSQL database dump
 --
 
-\restrict VIlbXhfJzvhKDJ9AqziU6Ft6aoQXbkTSAYnnIfs1HJ4JUb717X2nYz4VdWVhwTj
+\restrict vb8M8W3Tdib52hHIEE51NJf6s4eVfT9CcC8D3Dc4BHdCYbvMsoYYxwRfBDGTGPM
 
--- Dumped from database version 17.8 (6108b59)
+-- Dumped from database version 17.8 (a284a84)
 -- Dumped by pg_dump version 17.7
 
 SET statement_timeout = 0;
@@ -19,7 +19,243 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: neon_auth; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA neon_auth;
+
+
 SET default_table_access_method = heap;
+
+--
+-- Name: account; Type: TABLE; Schema: neon_auth; Owner: -
+--
+
+CREATE TABLE neon_auth.account (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    "accountId" text NOT NULL,
+    "providerId" text NOT NULL,
+    "userId" uuid NOT NULL,
+    "accessToken" text,
+    "refreshToken" text,
+    "idToken" text,
+    "accessTokenExpiresAt" timestamp with time zone,
+    "refreshTokenExpiresAt" timestamp with time zone,
+    scope text,
+    password text,
+    "createdAt" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL
+);
+
+
+--
+-- Name: invitation; Type: TABLE; Schema: neon_auth; Owner: -
+--
+
+CREATE TABLE neon_auth.invitation (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    "organizationId" uuid NOT NULL,
+    email text NOT NULL,
+    role text,
+    status text NOT NULL,
+    "expiresAt" timestamp with time zone NOT NULL,
+    "createdAt" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "inviterId" uuid NOT NULL
+);
+
+
+--
+-- Name: jwks; Type: TABLE; Schema: neon_auth; Owner: -
+--
+
+CREATE TABLE neon_auth.jwks (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    "publicKey" text NOT NULL,
+    "privateKey" text NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "expiresAt" timestamp with time zone
+);
+
+
+--
+-- Name: member; Type: TABLE; Schema: neon_auth; Owner: -
+--
+
+CREATE TABLE neon_auth.member (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    "organizationId" uuid NOT NULL,
+    "userId" uuid NOT NULL,
+    role text NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL
+);
+
+
+--
+-- Name: organization; Type: TABLE; Schema: neon_auth; Owner: -
+--
+
+CREATE TABLE neon_auth.organization (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    slug text NOT NULL,
+    logo text,
+    "createdAt" timestamp with time zone NOT NULL,
+    metadata text
+);
+
+
+--
+-- Name: project_config; Type: TABLE; Schema: neon_auth; Owner: -
+--
+
+CREATE TABLE neon_auth.project_config (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    endpoint_id text NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    trusted_origins jsonb NOT NULL,
+    social_providers jsonb NOT NULL,
+    email_provider jsonb,
+    email_and_password jsonb,
+    allow_localhost boolean NOT NULL,
+    plugin_configs jsonb,
+    webhook_config jsonb
+);
+
+
+--
+-- Name: session; Type: TABLE; Schema: neon_auth; Owner: -
+--
+
+CREATE TABLE neon_auth.session (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    "expiresAt" timestamp with time zone NOT NULL,
+    token text NOT NULL,
+    "createdAt" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    "ipAddress" text,
+    "userAgent" text,
+    "userId" uuid NOT NULL,
+    "impersonatedBy" text,
+    "activeOrganizationId" text
+);
+
+
+--
+-- Name: user; Type: TABLE; Schema: neon_auth; Owner: -
+--
+
+CREATE TABLE neon_auth."user" (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    email text NOT NULL,
+    "emailVerified" boolean NOT NULL,
+    image text,
+    "createdAt" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "updatedAt" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    role text,
+    banned boolean,
+    "banReason" text,
+    "banExpires" timestamp with time zone
+);
+
+
+--
+-- Name: verification; Type: TABLE; Schema: neon_auth; Owner: -
+--
+
+CREATE TABLE neon_auth.verification (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    identifier text NOT NULL,
+    value text NOT NULL,
+    "expiresAt" timestamp with time zone NOT NULL,
+    "createdAt" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "updatedAt" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: broadband_availability; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.broadband_availability (
+    tlc integer NOT NULL,
+    service_name character varying(8),
+    max_speed smallint,
+    aid character varying(16),
+    unit character varying(16),
+    street_number character varying(32),
+    street_name character varying(32),
+    road_type character varying(16),
+    suburb character varying(40)
+);
+
+
+--
+-- Name: broadband_coverage; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.broadband_coverage (
+    x integer NOT NULL,
+    y integer NOT NULL,
+    geometry jsonb
+);
+
+
+--
+-- Name: broadband_coverage_tree; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.broadband_coverage_tree (
+    z smallint NOT NULL,
+    x integer NOT NULL,
+    y integer NOT NULL,
+    q1_empty boolean,
+    q1_full boolean,
+    q2_empty boolean,
+    q2_full boolean,
+    q3_empty boolean,
+    q3_full boolean,
+    q4_empty boolean,
+    q4_full boolean,
+    role smallint,
+    parent_x integer,
+    parent_y integer
+);
+
+
+--
+-- Name: COLUMN broadband_coverage_tree.x; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.broadband_coverage_tree.x IS 'smallint supports max to zoom=15';
+
+
+--
+-- Name: COLUMN broadband_coverage_tree.y; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.broadband_coverage_tree.y IS 'smallint supports max to zoom=15';
+
+
+--
+-- Name: broadband_outage_chorus; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.broadband_outage_chorus (
+    start_time timestamp with time zone,
+    incident_point jsonb,
+    incident_area jsonb,
+    role character varying(16),
+    n_impacted_services smallint,
+    description character varying(64),
+    update_time timestamp with time zone,
+    update_text text,
+    recorded_time timestamp with time zone
+);
+
 
 --
 -- Name: crawler_collect_trademe; Type: TABLE; Schema: public; Owner: -
@@ -244,40 +480,6 @@ COMMENT ON COLUMN public.fuel_stations.geo_hash IS 'Geometry hash code of quadtr
 
 
 --
--- Name: internet_availability; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.internet_availability (
-    tlc integer NOT NULL,
-    service_name character varying(8),
-    max_speed smallint,
-    aid character varying(16),
-    unit character varying(16),
-    street_number character varying(32),
-    street_name character varying(32),
-    road_type character varying(16),
-    suburb character varying(40)
-);
-
-
---
--- Name: internet_outage_chorus; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.internet_outage_chorus (
-    start_time timestamp with time zone,
-    incident_point jsonb,
-    incident_area jsonb,
-    role character varying(16),
-    n_impacted_services smallint,
-    description character varying(64),
-    update_time timestamp with time zone,
-    update_text text,
-    recorded_time timestamp with time zone
-);
-
-
---
 -- Name: macroeconomics_cpi_all; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -408,6 +610,16 @@ CREATE TABLE public.properties_homes (
 
 
 --
+-- Name: properties_homes_broadband_availability_link; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.properties_homes_broadband_availability_link (
+    property_id uuid NOT NULL,
+    tlc integer
+);
+
+
+--
 -- Name: properties_homes_detail; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -421,16 +633,6 @@ CREATE TABLE public.properties_homes_detail (
     estimated_rental_ub integer,
     estimated_rental_date date,
     estimated_price_date date
-);
-
-
---
--- Name: properties_homes_internet_availability_link; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.properties_homes_internet_availability_link (
-    property_id uuid NOT NULL,
-    tlc integer
 );
 
 
@@ -658,6 +860,134 @@ ALTER TABLE ONLY public.crawler_collect_trademe ALTER COLUMN id SET DEFAULT next
 
 
 --
+-- Name: account account_pkey; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.account
+    ADD CONSTRAINT account_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: invitation invitation_pkey; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.invitation
+    ADD CONSTRAINT invitation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: jwks jwks_pkey; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.jwks
+    ADD CONSTRAINT jwks_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: member member_pkey; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.member
+    ADD CONSTRAINT member_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: organization organization_pkey; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.organization
+    ADD CONSTRAINT organization_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: organization organization_slug_key; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.organization
+    ADD CONSTRAINT organization_slug_key UNIQUE (slug);
+
+
+--
+-- Name: project_config project_config_endpoint_id_key; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.project_config
+    ADD CONSTRAINT project_config_endpoint_id_key UNIQUE (endpoint_id);
+
+
+--
+-- Name: project_config project_config_pkey; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.project_config
+    ADD CONSTRAINT project_config_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: session session_pkey; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.session
+    ADD CONSTRAINT session_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: session session_token_key; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.session
+    ADD CONSTRAINT session_token_key UNIQUE (token);
+
+
+--
+-- Name: user user_email_key; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth."user"
+    ADD CONSTRAINT user_email_key UNIQUE (email);
+
+
+--
+-- Name: user user_pkey; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth."user"
+    ADD CONSTRAINT user_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: verification verification_pkey; Type: CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.verification
+    ADD CONSTRAINT verification_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: broadband_availability broadband_availability_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.broadband_availability
+    ADD CONSTRAINT broadband_availability_pk PRIMARY KEY (tlc);
+
+
+--
+-- Name: broadband_coverage broadband_coverage_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.broadband_coverage
+    ADD CONSTRAINT broadband_coverage_pk PRIMARY KEY (x, y);
+
+
+--
+-- Name: broadband_coverage_tree broadband_coverage_tree_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.broadband_coverage_tree
+    ADD CONSTRAINT broadband_coverage_tree_pk PRIMARY KEY (z, x, y);
+
+
+--
 -- Name: crimes crimes_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -703,14 +1033,6 @@ ALTER TABLE ONLY public.flood_overland_flow_paths
 
 ALTER TABLE ONLY public.fuel_prices
     ADD CONSTRAINT fuel_prices_pk PRIMARY KEY (station_id, fuel_type, update_time);
-
-
---
--- Name: internet_availability internet_availability_pk; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.internet_availability
-    ADD CONSTRAINT internet_availability_pk PRIMARY KEY (tlc);
 
 
 --
@@ -770,11 +1092,11 @@ ALTER TABLE ONLY public.population
 
 
 --
--- Name: properties_homes_internet_availability_link properties_homes_internet_availability_link_pk; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: properties_homes_broadband_availability_link properties_homes_broadband_availability_link_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.properties_homes_internet_availability_link
-    ADD CONSTRAINT properties_homes_internet_availability_link_pk PRIMARY KEY (property_id);
+ALTER TABLE ONLY public.properties_homes_broadband_availability_link
+    ADD CONSTRAINT properties_homes_broadband_availability_link_pk PRIMARY KEY (property_id);
 
 
 --
@@ -866,8 +1188,112 @@ ALTER TABLE ONLY public.crawler_collect_trademe
 
 
 --
+-- Name: account_userId_idx; Type: INDEX; Schema: neon_auth; Owner: -
+--
+
+CREATE INDEX "account_userId_idx" ON neon_auth.account USING btree ("userId");
+
+
+--
+-- Name: invitation_email_idx; Type: INDEX; Schema: neon_auth; Owner: -
+--
+
+CREATE INDEX invitation_email_idx ON neon_auth.invitation USING btree (email);
+
+
+--
+-- Name: invitation_organizationId_idx; Type: INDEX; Schema: neon_auth; Owner: -
+--
+
+CREATE INDEX "invitation_organizationId_idx" ON neon_auth.invitation USING btree ("organizationId");
+
+
+--
+-- Name: member_organizationId_idx; Type: INDEX; Schema: neon_auth; Owner: -
+--
+
+CREATE INDEX "member_organizationId_idx" ON neon_auth.member USING btree ("organizationId");
+
+
+--
+-- Name: member_userId_idx; Type: INDEX; Schema: neon_auth; Owner: -
+--
+
+CREATE INDEX "member_userId_idx" ON neon_auth.member USING btree ("userId");
+
+
+--
+-- Name: organization_slug_uidx; Type: INDEX; Schema: neon_auth; Owner: -
+--
+
+CREATE UNIQUE INDEX organization_slug_uidx ON neon_auth.organization USING btree (slug);
+
+
+--
+-- Name: session_userId_idx; Type: INDEX; Schema: neon_auth; Owner: -
+--
+
+CREATE INDEX "session_userId_idx" ON neon_auth.session USING btree ("userId");
+
+
+--
+-- Name: verification_identifier_idx; Type: INDEX; Schema: neon_auth; Owner: -
+--
+
+CREATE INDEX verification_identifier_idx ON neon_auth.verification USING btree (identifier);
+
+
+--
+-- Name: account account_userId_fkey; Type: FK CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.account
+    ADD CONSTRAINT "account_userId_fkey" FOREIGN KEY ("userId") REFERENCES neon_auth."user"(id) ON DELETE CASCADE;
+
+
+--
+-- Name: invitation invitation_inviterId_fkey; Type: FK CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.invitation
+    ADD CONSTRAINT "invitation_inviterId_fkey" FOREIGN KEY ("inviterId") REFERENCES neon_auth."user"(id) ON DELETE CASCADE;
+
+
+--
+-- Name: invitation invitation_organizationId_fkey; Type: FK CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.invitation
+    ADD CONSTRAINT "invitation_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES neon_auth.organization(id) ON DELETE CASCADE;
+
+
+--
+-- Name: member member_organizationId_fkey; Type: FK CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.member
+    ADD CONSTRAINT "member_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES neon_auth.organization(id) ON DELETE CASCADE;
+
+
+--
+-- Name: member member_userId_fkey; Type: FK CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.member
+    ADD CONSTRAINT "member_userId_fkey" FOREIGN KEY ("userId") REFERENCES neon_auth."user"(id) ON DELETE CASCADE;
+
+
+--
+-- Name: session session_userId_fkey; Type: FK CONSTRAINT; Schema: neon_auth; Owner: -
+--
+
+ALTER TABLE ONLY neon_auth.session
+    ADD CONSTRAINT "session_userId_fkey" FOREIGN KEY ("userId") REFERENCES neon_auth."user"(id) ON DELETE CASCADE;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict VIlbXhfJzvhKDJ9AqziU6Ft6aoQXbkTSAYnnIfs1HJ4JUb717X2nYz4VdWVhwTj
+\unrestrict vb8M8W3Tdib52hHIEE51NJf6s4eVfT9CcC8D3Dc4BHdCYbvMsoYYxwRfBDGTGPM
 

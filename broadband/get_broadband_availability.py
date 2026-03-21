@@ -53,16 +53,16 @@ def rate_limit(header_):
 
 
 # %% Get headers.
-with open("internet_outage/chorus_address_look_up.json") as f:
+with open("broadband/chorus_address_look_up.json") as f:
     header_address = json.load(f)
 header_address['x-transaction-id'] = str(uuid.uuid4())
-with open("internet_outage/chorus_broadband_availability.json") as f:
+with open("broadband/chorus_broadband_availability.json") as f:
     header_availability = json.load(f)
-with open("internet_outage/chorus_broadband_availability_bcc.json") as f:
+with open("broadband/chorus_broadband_availability_bcc.json") as f:
     header_availability_1 = json.load(f)
 
 # %% Get address to fetch.
-with open("internet_outage/homes_no_chorus.sql") as f:
+with open("broadband/homes_no_chorus.sql") as f:
     sql_houses = f.read()
 with engine.connect() as c:
     houses = pd.read_sql(sql_houses, c)
@@ -86,7 +86,7 @@ for i, row in houses.iterrows():
             engine,
             records_df,
             ["tlc"],
-            "internet_availability"
+            "broadband_availability"
         )
         records.clear()
         homes_chorus_link_df = pd.DataFrame(homes_chorus_link)
@@ -97,7 +97,7 @@ for i, row in houses.iterrows():
             engine,
             homes_chorus_link_df,
             ["property_id"],
-            "properties_homes_internet_availability_link"
+            "properties_homes_broadband_availability_link"
         )
         homes_chorus_link.clear()
 
@@ -213,7 +213,7 @@ upsert_dataframe(
     engine,
     records_df,
     ["tlc"],
-    "internet_availability"
+    "broadband_availability"
 )
 records.clear()
 homes_chorus_link_df = pd.DataFrame(homes_chorus_link)
@@ -223,6 +223,6 @@ upsert_dataframe(
     engine,
     homes_chorus_link_df,
     ["property_id"],
-    "properties_homes_internet_availability_link"
+    "properties_homes_broadband_availability_link"
 )
 homes_chorus_link.clear()

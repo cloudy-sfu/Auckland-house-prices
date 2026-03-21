@@ -17,9 +17,9 @@ logging.basicConfig(
 session = Session()
 
 # %% Load header.
-with open("internet_outage/chorus_config.json") as f:
+with open("broadband/chorus_config.json") as f:
     header_config = json.load(f)
-with open("internet_outage/chorus_incidents.json") as f:
+with open("broadband/chorus_incidents.json") as f:
     header_incidents = json.load(f)
 
 # %% Get auth.
@@ -118,8 +118,8 @@ outages['incident_point'] = outages['incident_point'].to_json()
 outages['incident_area'] = outages['incident_area'].to_json()
 engine = create_engine(os.environ['NEON_DB'])
 with engine.begin() as c:
-    delete_query = text("DELETE FROM public.internet_outage_chorus "
+    delete_query = text("DELETE FROM public.broadband_outage_chorus "
                         "WHERE recorded_time >= NOW() - INTERVAL '12 hours'")
     c.execute(delete_query)
-    outages.to_sql(name="internet_outage_chorus", con=c, schema="public", if_exists="append",
+    outages.to_sql(name="broadband_outage_chorus", con=c, schema="public", if_exists="append",
                    index=False)

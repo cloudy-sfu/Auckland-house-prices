@@ -31,10 +31,8 @@ jobs:
       - name: Run the script
         run: |
           python properties/get_homes_by_suburb.py
-          python -u internet_outage/get_broadband_availability.py &
-          PID1=$!
           python -u properties/get_land_tax.py &
           PID2=$!
           python -u properties/get_homes_detail.py &
           PID3=$!
-          wait $PID1 $PID2 $PID3
+          wait $PID2 $PID3
