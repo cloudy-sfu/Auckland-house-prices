@@ -40,20 +40,19 @@ class BatchList:
 
     def append(self, obj):
         self._items.append(obj)
-        n = len(self._items)
-        if n >= 500:
-            df = pd.DataFrame(self._items).convert_dtypes()
-            upsert_dataframe(
-                engine,
-                df,
-                self.unique_key_columns,
-                self.table_name
-            )
-            self._items.clear()
-            logging.info(f"Upserted {n} records to {self.table_name}.")
+        if len(self._items) >= 500:
+            self.flush()
 
-    def __len__(self):
-        return len(self._items)
+    def flush(self):
+        df = pd.DataFrame(self._items).convert_dtypes()
+        upsert_dataframe(
+            engine,
+            df,
+            self.unique_key_columns,
+            self.table_name
+        )
+        self._items.clear()
+        logging.info(f"Upserted {df.shape[0]} records to {self.table_name}.")
 
 
 session = Session()
@@ -147,8 +146,6 @@ def get_leaf(x, y, z, dataset, parent_x=None, parent_y=None, role=None):
         "geometry": geometries
     }
     records.append(record)
-    global progress
-    progress += 1
 
 
 def get_branch(x, y, z, dataset, parent_x=None, parent_y=None, role=None):
@@ -217,7 +214,6 @@ def get_branch(x, y, z, dataset, parent_x=None, parent_y=None, role=None):
 west, south, east, north = 174.20, -37.35, 175.30, -36.10
 base_tiles = mercantile.tiles(west, south, east, north, zooms=[start_zoom])
 base_tiles = [[tile.z, tile.x, tile.y] for tile in base_tiles]
-progress_total = len(base_tiles) * 4 ** (end_zoom - start_zoom)
 base_tiles = pd.DataFrame(data=base_tiles, columns=["z", "x", "y"])
 with engine.connect() as c:
     recorded_base_tiles = pd.read_sql(
@@ -225,16 +221,15 @@ with engine.connect() as c:
 base_tiles_idx = pd.MultiIndex.from_frame(base_tiles[['x', 'y']])
 recorded_base_tiles_idx = pd.MultiIndex.from_frame(recorded_base_tiles[['x', 'y']])
 missed_base_tiles = base_tiles.loc[~base_tiles_idx.isin(recorded_base_tiles_idx)]
-progress = missed_base_tiles.shape[0] * 4 ** (end_zoom - start_zoom)
 
 # %% Build from terminal node.
 with engine.connect() as c:
     terminal_nodes = pd.read_sql(sql_terminal_nodes, c)
-progress += (4 ** (end_zoom - terminal_nodes['z'])).sum()
-logging.info(f"Start from progress {progress}/{progress_total}.")
 
 # %% Execute tasks.
 for _, base_tile in missed_base_tiles.iterrows():
     get_branch(base_tile['x'], base_tile['y'], base_tile['z'], dataset_)
 for _, row in terminal_nodes.iterrows():
     get_branch(row['x'], row['y'], row['z'], dataset_)
+trees.flush()
+records.flush()
