@@ -29,4 +29,5 @@ jobs:
 
       - name: Run the script
         run: |
-          python broadband/get_broadband_coverage.py
+          python broadband/get_broadband_coverage.py --service fiber
+          python broadband/get_broadband_coverage.py --service hyperfiber

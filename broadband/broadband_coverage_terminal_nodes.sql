@@ -3,7 +3,7 @@ SELECT
     p.x,
     p.y
 FROM
-    public.broadband_coverage_tree p
+    :table_name p
 WHERE
     -- Check Q1: partially full but child (2*x, 2*y) is missing
     (p.q1_empty = FALSE AND p.q1_full = FALSE AND NOT EXISTS (

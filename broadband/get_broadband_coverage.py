@@ -1,8 +1,10 @@
+# Reference: https://www.chorus.co.nz/help/tools/broadband-availability-map
 import json
 import logging
 import os
 import sys
 import time
+from argparse import ArgumentParser
 from io import BytesIO
 
 import mercantile
@@ -17,7 +19,9 @@ from sqlalchemy import create_engine
 from postgresql_upsert import upsert_dataframe
 
 # %% Constants.
-service = "fiber"
+parser = ArgumentParser()
+parser.add_argument('--service', required=True)
+args, _ = parser.parse_known_args()
 
 # %% Initialization.
 logging.basicConfig(
@@ -26,18 +30,6 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S',
     stream=sys.stdout,
 )
-session = Session()
-with open("broadband/chorus_broadband_coverage.json") as f:
-    header = json.load(f)
-engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
-match service:
-    case 'fiber':
-        dataset_ = "viewer_fibre.1761908400.1762372040"
-    case _:
-        raise Exception("Cannot recognize Internet connection type.")
-start_zoom = 10
-end_zoom = 15
-assert end_zoom - start_zoom > 0, "End zoom must be larger than start zoom."
 
 
 class BatchList:
@@ -64,9 +56,33 @@ class BatchList:
         return len(self._items)
 
 
-trees = BatchList("broadband_coverage_tree", ["z", "x", "y"])
-records = BatchList("broadband_coverage", ["x", "y"])
-
+session = Session()
+with open("broadband/chorus_broadband_coverage.json") as f:
+    header = json.load(f)
+engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
+with open("broadband/broadband_coverage_terminal_nodes.sql") as f:
+    sql_terminal_nodes = f.read()
+service = args.service
+match service:
+    case 'fiber':
+        dataset_ = "viewer_fibre.1761908400.1762372040"
+        nocache = "1762372055"  # Thu Nov 06 2025 08:47:35 GMT+1300 (New Zealand Daylight Time)
+        sql_terminal_nodes = (
+            sql_terminal_nodes.replace(':table_name', 'broadband_coverage_tree'))
+        trees = BatchList("broadband_coverage_tree", ["z", "x", "y"])
+        records = BatchList("broadband_coverage", ["x", "y"])
+    case 'hyperfiber':
+        dataset_ = "hyperfibre.0004"
+        nocache = "1602412470"  # Sun Oct 11 2020 23:34:30 GMT+1300 (New Zealand Daylight Time)
+        sql_terminal_nodes = (
+            sql_terminal_nodes.replace(':table_name', 'broadband_coverage_tree_hyperfiber'))
+        trees = BatchList("broadband_coverage_tree_hyperfiber", ["z", "x", "y"])
+        records = BatchList("broadband_coverage_hyperfiber", ["x", "y"])
+    case _:
+        raise Exception("Cannot recognize Internet connection type.")
+start_zoom = 10
+end_zoom = 15
+assert end_zoom - start_zoom > 0, "End zoom must be larger than start zoom."
 
 # %% Traverse operations.
 def _get_tile_mask(x, y, z, dataset):
@@ -74,7 +90,7 @@ def _get_tile_mask(x, y, z, dataset):
         "https://bbc-viewer-v4.wivolo.com/tiles/render",
         params={
             "dataset": dataset,
-            "nocache": "1762372055",
+            "nocache": nocache,
             "index": f"{z}/{x}/{y}",
             "notice": "for-display-on-chorus-website-only",
         },
@@ -212,8 +228,6 @@ missed_base_tiles = base_tiles.loc[~base_tiles_idx.isin(recorded_base_tiles_idx)
 progress = missed_base_tiles.shape[0] * 4 ** (end_zoom - start_zoom)
 
 # %% Build from terminal node.
-with open("broadband/broadband_coverage_terminal_nodes.sql") as f:
-    sql_terminal_nodes = f.read()
 with engine.connect() as c:
     terminal_nodes = pd.read_sql(sql_terminal_nodes, c)
 progress += (4 ** (end_zoom - terminal_nodes['z'])).sum()
