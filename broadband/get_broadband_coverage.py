@@ -45,6 +45,7 @@ class BatchList:
 
     def flush(self):
         df = pd.DataFrame(self._items).convert_dtypes()
+        df.drop_duplicates(subset=self.unique_key_columns, keep='first', inplace=True)
         upsert_dataframe(
             engine,
             df,
@@ -170,23 +171,25 @@ def get_branch(x, y, z, dataset, parent_x=None, parent_y=None, role=None):
     q4_any = q4.any()
     q4_full = q4.all()
 
-    tree = {
-        "z": z,
-        "x": x,
-        "y": y,
-        "q1_empty": not q1_any,
-        "q1_full": q1_full,
-        "q2_empty": not q2_any,
-        "q2_full": q2_full,
-        "q3_empty": not q3_any,
-        "q3_full": q3_full,
-        "q4_empty": not q4_any,
-        "q4_full": q4_full,
-        "parent_x": parent_x,
-        "parent_y": parent_y,
-        "role": role,
-    }
-    trees.append(tree)
+    if not (z > start_zoom and (parent_x is None or parent_y is None)):
+        # exclude restored terminal nodes
+        tree = {
+            "z": z,
+            "x": x,
+            "y": y,
+            "q1_empty": not q1_any,
+            "q1_full": q1_full,
+            "q2_empty": not q2_any,
+            "q2_full": q2_full,
+            "q3_empty": not q3_any,
+            "q3_full": q3_full,
+            "q4_empty": not q4_any,
+            "q4_full": q4_full,
+            "parent_x": parent_x,
+            "parent_y": parent_y,
+            "role": role,
+        }
+        trees.append(tree)
 
     if q1_any and (not q1_full):
         if z < end_zoom - 1:
