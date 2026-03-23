@@ -1,7 +1,7 @@
 {
     "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
     "accept-encoding": "gzip, deflate, br, zstd",
-    "accept-language": "en-NZ,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
+    "accept-language": "en",
     "dnt": "1",
     "priority": "i",
     "referer": "https://www.chorus.co.nz/",

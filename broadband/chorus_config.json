@@ -1,7 +1,7 @@
 {
     "accept": "*/*",
     "accept-encoding": "gzip, deflate, zstd",
-    "accept-language": "en,zh-CN;q=0.9,zh;q=0.8",
+    "accept-language": "en",
     "cache-control": "no-cache",
     "dnt": "1",
     "pragma": "no-cache",

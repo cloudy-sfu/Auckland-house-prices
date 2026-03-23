@@ -1,7 +1,7 @@
 {
     "accept": "application/json, text/plain, */*",
     "accept-encoding": "gzip, deflate, br, zstd",
-    "accept-language": "en,zh-CN;q=0.9,zh;q=0.8",
+    "accept-language": "en",
     "authorization": "",
     "cache-control": "no-cache",
     "connection": "keep-alive",

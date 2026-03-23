@@ -1,7 +1,7 @@
 {
     "accept": "application/json, text/plain, */*",
     "accept-encoding": "gzip, deflate",
-    "accept-language": "en-NZ,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
+    "accept-language": "en",
     "baggage": "",
     "dnt": "1",
     "priority": "u=1, i",
