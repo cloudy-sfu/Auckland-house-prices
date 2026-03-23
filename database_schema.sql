@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict vb8M8W3Tdib52hHIEE51NJf6s4eVfT9CcC8D3Dc4BHdCYbvMsoYYxwRfBDGTGPM
+\restrict rdWXjzfG2XYtTQFMk0KUpUhvHwS3l7xtVEBhCpDkqzpfxh1C9qdH2osKyldlgFn
 
 -- Dumped from database version 17.8 (a284a84)
 -- Dumped by pg_dump version 17.7
@@ -205,6 +205,17 @@ CREATE TABLE public.broadband_coverage (
 
 
 --
+-- Name: broadband_coverage_hyperfiber; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.broadband_coverage_hyperfiber (
+    geometry jsonb,
+    y integer NOT NULL,
+    x integer NOT NULL
+);
+
+
+--
 -- Name: broadband_coverage_tree; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -238,6 +249,42 @@ COMMENT ON COLUMN public.broadband_coverage_tree.x IS 'smallint supports max to 
 --
 
 COMMENT ON COLUMN public.broadband_coverage_tree.y IS 'smallint supports max to zoom=15';
+
+
+--
+-- Name: broadband_coverage_tree_hyperfiber; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.broadband_coverage_tree_hyperfiber (
+    q3_empty boolean,
+    q2_empty boolean,
+    q2_full boolean,
+    x integer NOT NULL,
+    q1_full boolean,
+    z smallint NOT NULL,
+    q3_full boolean,
+    y integer NOT NULL,
+    q4_empty boolean,
+    role smallint,
+    q4_full boolean,
+    parent_y integer,
+    q1_empty boolean,
+    parent_x integer
+);
+
+
+--
+-- Name: COLUMN broadband_coverage_tree_hyperfiber.x; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.broadband_coverage_tree_hyperfiber.x IS 'smallint supports max to zoom=15';
+
+
+--
+-- Name: COLUMN broadband_coverage_tree_hyperfiber.y; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.broadband_coverage_tree_hyperfiber.y IS 'smallint supports max to zoom=15';
 
 
 --
@@ -327,6 +374,18 @@ CREATE TABLE public.crimes (
     robbery integer,
     sexual_offence integer,
     theft integer
+);
+
+
+--
+-- Name: ethnicity; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ethnicity (
+    suburb_id integer NOT NULL,
+    year smallint NOT NULL,
+    ethnicity character varying(32) NOT NULL,
+    percentage double precision
 );
 
 
@@ -972,11 +1031,27 @@ ALTER TABLE ONLY public.broadband_availability
 
 
 --
+-- Name: broadband_coverage_hyperfiber broadband_coverage_hyperfiber_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.broadband_coverage_hyperfiber
+    ADD CONSTRAINT broadband_coverage_hyperfiber_pk PRIMARY KEY (x, y);
+
+
+--
 -- Name: broadband_coverage broadband_coverage_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.broadband_coverage
     ADD CONSTRAINT broadband_coverage_pk PRIMARY KEY (x, y);
+
+
+--
+-- Name: broadband_coverage_tree_hyperfiber broadband_coverage_tree_hyperfiber_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.broadband_coverage_tree_hyperfiber
+    ADD CONSTRAINT broadband_coverage_tree_hyperfiber_pk PRIMARY KEY (z, x, y);
 
 
 --
@@ -993,6 +1068,14 @@ ALTER TABLE ONLY public.broadband_coverage_tree
 
 ALTER TABLE ONLY public.crimes
     ADD CONSTRAINT crimes_pk PRIMARY KEY (suburb_id, year, month);
+
+
+--
+-- Name: ethnicity ethnicity_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ethnicity
+    ADD CONSTRAINT ethnicity_pk PRIMARY KEY (suburb_id, year, ethnicity);
 
 
 --
@@ -1295,5 +1378,5 @@ ALTER TABLE ONLY neon_auth.session
 -- PostgreSQL database dump complete
 --
 
-\unrestrict vb8M8W3Tdib52hHIEE51NJf6s4eVfT9CcC8D3Dc4BHdCYbvMsoYYxwRfBDGTGPM
+\unrestrict rdWXjzfG2XYtTQFMk0KUpUhvHwS3l7xtVEBhCpDkqzpfxh1C9qdH2osKyldlgFn
 
