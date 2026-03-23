@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, text
 import os
 
-engine = create_engine(os.environ['NEON_DB'])
+engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
 with engine.connect() as c:
     query_1 = c.execute(text("select count(*) from suburbs"))
     result = query_1.fetchone()

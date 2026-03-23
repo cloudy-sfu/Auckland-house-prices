@@ -22,12 +22,12 @@ suburbs = response.json()['features']['features']
 suburbs = [
     {
         "suburb_id": int(suburb['properties']['area_code']),
-        "name": suburb['properties']['name'],
+        "name": suburb['properties']['name'].strip(),
         "geometry": suburb['geometry'],
     }
     for suburb in suburbs
 ]
 suburbs = pd.DataFrame(suburbs)
 
-engine = create_engine(os.environ['NEON_DB'])
+engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
 upsert_dataframe(engine, suburbs, ["suburb_id"], "suburbs")

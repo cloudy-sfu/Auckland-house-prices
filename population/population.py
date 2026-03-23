@@ -19,7 +19,7 @@ session = Session()
 now = pd.Timestamp('now', tz='UTC')
 end_year = now.year
 
-engine = create_engine(os.environ['NEON_DB'])
+engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
 with engine.connect() as c:
     existed_years = pd.read_sql("select distinct year from public.population", c)
 all_years = set(range(2015, end_year + 1))
