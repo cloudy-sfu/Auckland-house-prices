@@ -9,7 +9,6 @@ import uuid
 import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine
-from tqdm import tqdm
 
 from postgresql_upsert import upsert_dataframe
 
@@ -74,8 +73,6 @@ assert all(fuel_type in fuel_types.keys() for fuel_type in selected_fuel_types),
 now = pd.Timestamp('now', tz='UTC')
 start_time = now - pd.Timedelta(days=1)
 device_id = str(uuid.uuid4()).upper()
-pbar = tqdm(desc="Record fuel prices",
-            total=len(selected_fuel_types) * len(stations_chunks))
 compound_data = []
 
 
@@ -135,7 +132,6 @@ for fuel_type in selected_fuel_types:
                     "geo_hash": station.get('geoHash', pd.NA),
                     "name": station.get('stationName', pd.NA),
                 })
-        pbar.update(1)
 
 compound_data = pd.DataFrame(compound_data)
 compound_data.drop_duplicates(subset=['station_id', 'fuel_type'], inplace=True)

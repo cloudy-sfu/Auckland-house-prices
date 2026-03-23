@@ -9,7 +9,6 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from requests import Session
 from sqlalchemy import create_engine
-from tqdm import tqdm
 
 from postgresql_upsert import upsert_dataframe
 
@@ -65,7 +64,7 @@ month_map = {
     "September": 9, "October": 10, "November": 11, "December": 12
 }
 
-for local_board_card in tqdm(local_board_cards):
+for local_board_card in local_board_cards:
     local_board_link = local_board_card.find('a').get('href')
     match_3 = re.search(r"/([^/]+?)(?:-local-board)?/?$", local_board_link)
     if match_3:

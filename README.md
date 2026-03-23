@@ -104,6 +104,8 @@ chmod -R 755 scheduled_jobs/
 
 ### Fuel prices dashboard
 
+This dashboard find and compare current fuel prices across different stations in New Zealand. By selecting a preferred fuel type, it displays an interactive map highlighting pricing hotspots to uncover the cheapest options nearby. Clicking on a specific station reveals its current price details and unlocks a historical view of its price changes over time, while an additional page lets the user to explore broader price trends and probability distributions for your specific city.
+
 Activate Python environment "Dashboard".
 
 Add the following variables into environment variables.
@@ -124,6 +126,8 @@ Find the URL in terminal output and open in the browser.
 
 ### Crime count dashboard
 
+This dashboard displays safety trends across Auckland's neighborhoods for any specific time period. By adjusting the start and end dates, the user can visualize the total number of reported crimes on a color-coded map to instantly identify which areas experience higher or lower crime rates. Selecting a specific suburb takes the user deeper into the data, providing a month-by-month visual breakdown of different crime types, such as burglary, assault, and theft.
+
 Activate Python environment "Dashboard".
 
 Add the following variables into environment variables.
@@ -140,3 +144,24 @@ python fuel/dashboard.py
 
 Find the URL in terminal output and open in the browser.
 
+
+
+### Ethnicity ratio dashboard
+
+This dashboard provides a visual exploration of Auckland's demographic makeup over time. Using an interactive map, the user can select specific years and ethnic groups to see how populations are distributed across different suburbs. The color-coded neighborhoods make it easy to identify cultural hubs and understand the unique, diverse composition of Auckland's communities at a glance.
+
+Activate Python environment "Dashboard".
+
+Add the following variables into environment variables.
+
+| Variable | Description                         |
+| -------- | ----------------------------------- |
+| NEON_DB  | Connection string to Neon database. |
+
+Run the following command in terminal.
+
+```
+python population/dashboard.py
+```
+
+Find the URL in terminal output and open in the browser.
