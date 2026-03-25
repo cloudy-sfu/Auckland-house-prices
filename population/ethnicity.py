@@ -48,6 +48,7 @@ def create_slug(name):
 ethnicity_all_suburbs = []
 for i, row in suburbs.iterrows():
     db_suburb_name = row['name']
+    suburb_id = row['suburb_id']
     try:
         response = session.get(
             f"https://tools.summaries.stats.govt.nz/api/place/by-descriptor/"
@@ -57,7 +58,7 @@ for i, row in suburbs.iterrows():
         response.raise_for_status()
         results = response.json()
         website_suburb_name = next(result['descriptor'] for result in results
-                                   if result['badge'] == 'SA2')
+                                   if result['code'] == str(suburb_id))
     except Exception as e:
         logging.warning(f"Fail to search suburb name in Stats NZ corresponding to "
                         f"\"{db_suburb_name}\". {type(e).__name__}: {e}")
@@ -104,7 +105,7 @@ for i, row in suburbs.iterrows():
         continue
 
     ethnicity = pd.DataFrame(ethnicity)[['period', 'variable1_descriptor', 'value']]
-    ethnicity['suburb_id'] = row['suburb_id']
+    ethnicity['suburb_id'] = suburb_id
     ethnicity_all_suburbs.append(ethnicity)
     logging.info(f"Processed ethnicity of suburbs {i+1}/{n_suburbs}.")
 
