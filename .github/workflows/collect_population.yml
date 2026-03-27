@@ -30,5 +30,8 @@ jobs:
       - name: Run the script
         run: |
           python population/suburbs.py
-          python population/population.py
-          python population/ethnicity.py
+          python -u population/population.py &
+          PID1=$!
+          python -u population/ethnicity_age.py &
+          PID2=$!
+          wait $PID1 $PID2

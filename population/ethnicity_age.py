@@ -46,6 +46,7 @@ def create_slug(name):
 
 
 ethnicity_all_suburbs = []
+age_all_suburbs = []
 for i, row in suburbs.iterrows():
     db_suburb_name = row['name']
     suburb_id = row['suburb_id']
@@ -100,13 +101,34 @@ for i, row in suburbs.iterrows():
                                  if section['section_id'] == 1033)
         ethnicity = ethnicity_section['numbers_data']['numbers']
     except Exception as e:
-        logging.warning(f"Cannot parse data of suburb \"{db_suburb_name}\". "
+        logging.warning(f"Cannot parse ethnicity of suburb \"{db_suburb_name}\". "
                         f"{type(e).__name__}: {e}")
-        continue
+    else:
+        ethnicity = pd.DataFrame(ethnicity)[['period', 'variable1_descriptor', 'value']]
+        ethnicity['suburb_id'] = suburb_id
+        ethnicity_all_suburbs.append(ethnicity)
 
-    ethnicity = pd.DataFrame(ethnicity)[['period', 'variable1_descriptor', 'value']]
-    ethnicity['suburb_id'] = suburb_id
-    ethnicity_all_suburbs.append(ethnicity)
+    try:
+        topics = data['props']['pageProps']['place']
+        age_topic = next(topic for topic in topics if topic['topic_id'] == 11)
+        concepts = age_topic['concepts']
+        age_concept = next(concept for concept in concepts
+                                 if concept['concept_id'] == 102)
+        sections = age_concept['sections']
+        age_section = next(section for section in sections
+                                 if section['section_id'] == 1018)
+        age = age_section['numbers_data']['numbers']
+    except Exception as e:
+        logging.warning(f"Cannot parse age structure of suburb \"{db_suburb_name}\". "
+                        f"{type(e).__name__}: {e}")
+    else:
+        age = pd.DataFrame(age)
+        age['age_group'] = age[
+            'variable1_descriptor'].str.extract(r'^(\d+)')[0].astype(int)
+        age['suburb_id'] = suburb_id
+        age = age[['suburb_id', 'period', 'age_group', 'value']]
+        age_all_suburbs.append(age)
+
     logging.info(f"Processed ethnicity of suburbs {i+1}/{n_suburbs}.")
 
 # %% Post-processing.
@@ -118,6 +140,11 @@ ethnicity_all_suburbs.rename(
 ethnicity_all_suburbs.drop_duplicates(
     subset=['suburb_id', 'year', 'ethnicity'], inplace=True)
 ethnicity_all_suburbs = ethnicity_all_suburbs.convert_dtypes()
+age_all_suburbs = pd.concat(age_all_suburbs, axis=0)
+age_all_suburbs.rename(
+    columns={'period': 'year', 'value': 'percentage'},
+    inplace=True
+)
 
 # %% Export.
 batch_size = 500
@@ -127,4 +154,11 @@ for i in range(0, ethnicity_all_suburbs.shape[0], batch_size):
         ethnicity_all_suburbs.iloc[i:i+batch_size, :],
         ['suburb_id', 'year', 'ethnicity'],
         "ethnicity",
+    )
+for i in range(0, age_all_suburbs.shape[0], batch_size):
+    upsert_dataframe(
+        engine,
+        age_all_suburbs.iloc[i:i+batch_size, :],
+        ['suburb_id', 'year', 'age_group'],
+        "age_structure",
     )

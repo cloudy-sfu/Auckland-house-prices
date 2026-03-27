@@ -2,12 +2,10 @@ import json
 import os
 import socket
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import Dash, dcc, html, Input, Output, callback, no_update
-from shapely.geometry import shape
+from dash import Dash, dcc, html, Input, Output, callback, no_update, ctx
 from sqlalchemy import create_engine, text
 
 # --- 1. Database ---
@@ -15,11 +13,16 @@ engine = create_engine(os.environ.get("NEON_DB"), pool_recycle=300)
 
 with open("population/get_ethnicity.sql") as f:
     sql_ethnicity = f.read()
+with open("population/get_suburb.sql") as f:
+    sql_suburb_breakdown = f.read()
 
 
 def get_ethnicity_data(year, ethnicity):
-    return pd.read_sql(text(sql_ethnicity), engine,
-                       params={"year": year, "ethnicity": ethnicity})
+    return pd.read_sql(
+        text(sql_ethnicity),
+        engine,
+        params={"year": year, "ethnicity": ethnicity}
+    )
 
 
 def get_distinct_ethnicities():
@@ -30,6 +33,14 @@ def get_distinct_ethnicities():
 def get_distinct_years():
     df = pd.read_sql("SELECT DISTINCT year FROM public.ethnicity ORDER BY year", engine)
     return df["year"].tolist()
+
+
+def get_suburb_ethnicity_breakdown(suburb_id, year):
+    return pd.read_sql(
+        text(sql_suburb_breakdown),
+        engine,
+        params={"suburb_id": suburb_id, "year": year}
+    )
 
 
 # Ref: crime_dashboard.py build_geojson pattern
@@ -65,7 +76,7 @@ AUCKLAND_LAT = -36.85
 AUCKLAND_LON = 174.76
 AUCKLAND_ZOOM = 10
 
-# --- 4. Styles (from fuel_dashboard.py filter card + crime_dashboard.py patterns) ---
+# --- 4. Styles (from fuel_dashboard.py filter card + detail card patterns) ---
 
 FLOAT_CARD_STYLE = {
     'position': 'absolute',
@@ -77,6 +88,23 @@ FLOAT_CARD_STYLE = {
     'borderRadius': '8px',
     'boxShadow': '0 4px 6px rgba(0,0,0,0.1)',
     'width': '300px',
+    'fontFamily': 'Arial, sans-serif'
+}
+
+# Ref: fuel dashboard.py DETAIL_CARD_STYLE
+DETAIL_CARD_STYLE = {
+    'position': 'absolute',
+    'bottom': '30px',
+    'right': '30px',
+    'zIndex': '1000',
+    'backgroundColor': 'white',
+    'padding': '20px',
+    'borderRadius': '8px',
+    'boxShadow': '0 4px 15px rgba(0,0,0,0.2)',
+    'width': '350px',
+    'maxHeight': '400px',
+    'overflowY': 'auto',
+    'display': 'none',
     'fontFamily': 'Arial, sans-serif'
 }
 
@@ -109,6 +137,7 @@ def generate_map_figure(year, ethnicity):
                     "population": ":,",
                     "suburb_id": False
                 },
+                custom_data=["suburb_id", "name"],
                 color_continuous_scale="PuBu",
                 range_color=[pct_lb, pct_ub],
                 zoom=AUCKLAND_ZOOM,
@@ -202,11 +231,20 @@ app.layout = html.Div([
         style={'position': 'absolute', 'top': 0, 'left': 0,
                'height': '100%', 'width': '100%'},
         config={'scrollZoom': True, 'displayModeBar': True, 'responsive': True}
-    )
+    ),
+
+    # Detail card for ethnicity breakdown (Ref: fuel_dashboard.py detail-card pattern)
+    html.Div(id='detail-card', style=DETAIL_CARD_STYLE, children=[
+        html.Button("✕", id='close-card-btn', n_clicks=0,
+                    style={'float': 'right', 'background': 'none', 'border': 'none',
+                           'cursor': 'pointer', 'fontSize': '16px'}),
+        html.H3(id='card-title', style={'marginTop': '0', 'paddingRight': '20px'}),
+        html.Div(id='card-content'),
+    ])
 ], style={'width': '100vw', 'height': '100vh', 'position': 'relative'})
 
 
-# --- 7. Callback ---
+# --- 7. Callbacks ---
 
 @callback(
     Output('ethnicity-map', 'figure'),
@@ -220,8 +258,79 @@ def update_map(ethnicity, year):
     return generate_map_figure(year, ethnicity)
 
 
-# --- 8. Entry Point ---
+# Ref: fuel_dashboard.py handle_map_interaction callback pattern
+@callback(
+    Output('detail-card', 'style'),
+    Output('card-title', 'children'),
+    Output('card-content', 'children'),
+    Input('ethnicity-map', 'clickData'),
+    Input('close-card-btn', 'n_clicks'),
+    Input('year-dropdown', 'value'),
+    prevent_initial_call=True
+)
+def handle_map_click(clickData, close_clicks, year):
+    triggered_id = ctx.triggered_id
 
+    if triggered_id == 'close-card-btn':
+        style = DETAIL_CARD_STYLE.copy()
+        style['display'] = 'none'
+        return style, no_update, no_update
+
+    if triggered_id == 'year-dropdown':
+        style = DETAIL_CARD_STYLE.copy()
+        style['display'] = 'none'
+        return style, no_update, no_update
+
+    if not clickData or not year:
+        return no_update, no_update, no_update
+
+    point = clickData['points'][0]
+    try:
+        suburb_id = point['customdata'][0]
+        suburb_name = point['customdata'][1]
+    except (IndexError, KeyError):
+        return no_update, no_update, no_update
+
+    breakdown_df = get_suburb_ethnicity_breakdown(suburb_id, year)
+
+    if breakdown_df.empty:
+        content = html.P("No ethnicity data available.")
+    else:
+        total_pop = breakdown_df['population'][0]
+
+        table_header = html.Thead(html.Tr([
+            html.Th("Ethnicity", style={'textAlign': 'left', 'padding': '4px 8px'}),
+            html.Th("%", style={'textAlign': 'right', 'padding': '4px 8px'}),
+        ]))
+
+        table_rows = [
+            html.Tr([
+                html.Td(row['ethnicity'], style={'padding': '4px 8px'}),
+                html.Td(f"{row['percentage']:.1f}%",
+                         style={'textAlign': 'right', 'padding': '4px 8px'}),
+            ])
+            for _, row in breakdown_df.iterrows()
+        ]
+
+        content = html.Div([
+            html.P([html.Strong("Year: "), str(year)],
+                   style={'marginBottom': '5px'}),
+            html.P([html.Strong("Total population: "), f"{total_pop:,}"],
+                   style={'marginBottom': '10px'}),
+            html.Table(
+                [table_header, html.Tbody(table_rows)],
+                style={'width': '100%', 'borderCollapse': 'collapse',
+                       'fontSize': '14px'}
+            )
+        ])
+
+    style = DETAIL_CARD_STYLE.copy()
+    style['display'] = 'block'
+
+    return style, suburb_name, content
+
+
+# --- 8. Entry Point ---
 def find_available_port(start_port: int, tries: int = 100):
     for i in range(tries):
         try:
