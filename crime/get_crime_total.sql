@@ -12,6 +12,6 @@ SELECT
 FROM public.suburbs s
 LEFT JOIN public.crimes c
     ON s.suburb_id = c.suburb_id
-   AND (c.year * 100 + c.month) >= (:start_year * 100 + :start_month)
-   AND (c.year * 100 + c.month) <= (:end_year * 100 + :end_month)
+   AND (c.year * 12 + c.month) >= (:start_year * 12 + :start_month)
+   AND (c.year * 12 + c.month) <= (:end_year * 12 + :end_month)
 GROUP BY s.suburb_id, s.name, s.geometry;
