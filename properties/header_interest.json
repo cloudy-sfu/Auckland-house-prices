@@ -1,0 +1,19 @@
+{
+    "accept": "*/*",
+    "accept-encoding": "gzip, deflate, br, zstd",
+    "accept-language": "en-NZ,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
+    "cache-control": "no-cache",
+    "cookie": "",
+    "dnt": "1",
+    "pragma": "no-cache",
+    "priority": "u=1, i",
+    "referer": "",
+    "sec-ch-ua": "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"Windows\"",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+    "x-requested-with": "XMLHttpRequest"
+}

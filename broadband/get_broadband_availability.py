@@ -73,6 +73,7 @@ records = []
 homes_chorus_link = []
 valve_1 = valve_2 = valve_3 = True
 detail_continuous_failure_count = 0
+is_github_actions = os.getenv("GITHUB_ACTIONS") == "true"
 for i, row in houses.iterrows():
     address = row['address']
 
@@ -105,8 +106,8 @@ for i, row in houses.iterrows():
         logging.warning("Chorus API reaches daily limit and won't reset shortly, stop.")
         break
 
-    now = pd.Timestamp('now', tz='UTC')
-    if now - script_start_time > pd.Timedelta(hours=5, minutes=45):
+    if (is_github_actions and pd.Timestamp('now', tz='UTC') - script_start_time
+            > pd.Timedelta(hours=5, minutes=45)):
         logging.warning("Execution time reaches 5 hours and 45 minutes, stop.")
         break
 

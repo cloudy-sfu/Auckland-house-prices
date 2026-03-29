@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, text
 from postgresql_upsert import upsert_dataframe
 from telegram_logger import TelegramHandler
 
-# %% Setup logger.
+# %% Initialization.
 logging.basicConfig(
     level=logging.INFO,
     format="[%(levelname)s] %(pathname)s %(message)s",
@@ -20,28 +20,20 @@ logging.basicConfig(
         TelegramHandler(os.environ.get("TG_BOT_TOKEN"), os.environ.get("TG_CHAT_ID"))
     ],
 )
-
-# %% Calc last checkout
-engine = create_engine(os.environ["NEON_DB"])
+session = Session()
+with open("properties/header_trademe.json", "r") as f:
+    header = json.load(f)
+engine = create_engine(os.environ["NEON_DB"], pool_recycle=300)
 with engine.begin() as c:
-    result = c.execute(text("select max(\"solving_start_time\") from crawler_collect_trademe "
+    result = c.execute(text("select max(solving_start_time) from collect_trademe "
                             "where solving_end_time is not null;"))
     last_checkout_time = result.fetchone()[0]
+    result = c.execute(text("insert into collect_trademe default values returning id;"))
+    task_id = result.fetchone()[0]
 if last_checkout_time is None:
     last_checkout_time = pd.Timestamp(0, tz="UTC")
 
-# %% Initialize web crawler.
-session = Session()
-with open("properties/header_1.json", "r") as f:
-    header = json.load(f)
-
-# %% Initialize meta data.
-with engine.begin() as c:
-    result = c.execute(text("insert into crawler_collect_trademe (solving_start_time) values "
-                            "(NOW()) RETURNING id;"))
-    task_id = result.fetchone()[0]
-
-# %%
+# %% Main.
 try:
     response = session.get(
         "https://www.trademe.co.nz/a/property/residential/sale/auckland",
@@ -82,13 +74,13 @@ for page in range(1, n_pages + 1):
         if failed_pages <= max_failed_pages:
             logging.warning(f"[Page {page}] {type(e).__name__}: {e}")
             with engine.begin() as c:
-                c.execute(text("UPDATE crawler_collect_trademe SET failed_pages = array_append("
+                c.execute(text("UPDATE collect_trademe SET failed_pages = array_append("
                                "COALESCE(failed_pages, ARRAY[]::integer[]), :page) "
                                "WHERE id = :task_id;"),
                           {"page": page, "task_id": task_id})
         else:
             with engine.begin() as c:
-                c.execute(text("UPDATE crawler_collect_trademe SET stop_before_page = :page "
+                c.execute(text("UPDATE collect_trademe SET stop_before_page = :page "
                                "WHERE id = :task_id;"),
                           {"page": page, "task_id": task_id})
             logging.error("Exceed maximum number pages failed to parse.")
@@ -114,7 +106,7 @@ for page in range(1, n_pages + 1):
                 'properties_trademe',
             )
             with engine.begin() as c:
-                c.execute(text("UPDATE crawler_collect_trademe SET solving_end_time = NOW(), "
+                c.execute(text("UPDATE collect_trademe SET solving_end_time = NOW(), "
                                "complete_after_page = :page "
                                "WHERE id = :task_id"),
                           {"page": page, "task_id": task_id})

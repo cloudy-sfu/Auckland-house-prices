@@ -1,0 +1,32 @@
+name: Collect auctions - Interest
+
+on:
+  schedule:
+    - cron: '0 16 * * 1-5'  # UTC working days 16:00, NZ next day 4:00/5:00
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    env:
+      NEON_DB: ${{ secrets.NEON_DB }}
+      PYTHONPATH: . 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run the script
+        run: |
+          python properties/get_auctions_interest.py

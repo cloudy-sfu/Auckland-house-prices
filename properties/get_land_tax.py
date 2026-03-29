@@ -31,6 +31,7 @@ with engine.connect() as c:
 # %% Main loop.
 homes_land_link = []
 records = []
+is_github_actions = os.getenv("GITHUB_ACTIONS") == "true"
 logging.info(f"Total number of properties to query land tax: {houses.shape[0]}")
 for i, row in houses.iterrows():
     address = row['address']
@@ -64,8 +65,8 @@ for i, row in houses.iterrows():
         )
         homes_land_link.clear()
 
-    now = pd.Timestamp('now', tz='UTC')
-    if now - script_start_time > pd.Timedelta(hours=5, minutes=45):
+    if (is_github_actions and pd.Timestamp('now', tz='UTC') - script_start_time
+            > pd.Timedelta(hours=5, minutes=45)):
         logging.warning("Execution time reaches 5 hours and 45 minutes, stop.")
         break
 

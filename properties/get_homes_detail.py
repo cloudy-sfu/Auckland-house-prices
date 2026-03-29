@@ -32,6 +32,7 @@ logging.info(f"Total number of properties to query details: {properties.shape[0]
 
 # %% Main loop.
 houses = []
+is_github_actions = os.getenv("GITHUB_ACTIONS") == "true"
 for i, row in properties.iterrows():
     property_id = row['property_id']
 
@@ -49,8 +50,8 @@ for i, row in properties.iterrows():
         )
         houses.clear()
 
-    now = pd.Timestamp('now', tz='UTC')
-    if now - script_start_time > pd.Timedelta(hours=5, minutes=45):
+    if (is_github_actions and pd.Timestamp('now', tz='UTC') - script_start_time
+            > pd.Timedelta(hours=5, minutes=45)):
         logging.warning("Execution time reaches 5 hours and 45 minutes, stop.")
         break
 

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict rdWXjzfG2XYtTQFMk0KUpUhvHwS3l7xtVEBhCpDkqzpfxh1C9qdH2osKyldlgFn
+\restrict R9I0avsojd2rc3vXndl1nI9PxEdUN2EpEuam1qLnBA3AUt8chZoqxSxSbgO3hux
 
 -- Dumped from database version 17.8 (a284a84)
 -- Dumped by pg_dump version 17.7
@@ -177,6 +177,18 @@ CREATE TABLE neon_auth.verification (
 
 
 --
+-- Name: age_structure; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.age_structure (
+    suburb_id integer NOT NULL,
+    year smallint NOT NULL,
+    age_group smallint NOT NULL,
+    percentage double precision
+);
+
+
+--
 -- Name: broadband_availability; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -305,59 +317,93 @@ CREATE TABLE public.broadband_outage_chorus (
 
 
 --
--- Name: crawler_collect_trademe; Type: TABLE; Schema: public; Owner: -
+-- Name: collect_auction_interest; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.crawler_collect_trademe (
-    solving_start_time timestamp with time zone,
+CREATE TABLE public.collect_auction_interest (
+    id integer NOT NULL,
+    solving_start_time timestamp with time zone DEFAULT now(),
     solving_end_time timestamp with time zone,
     stop_before_page smallint,
-    failed_pages integer[],
+    failed_pages smallint[],
+    complete_after_page smallint
+);
+
+
+--
+-- Name: collect_auction_interest_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.collect_auction_interest_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: collect_auction_interest_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.collect_auction_interest_id_seq OWNED BY public.collect_auction_interest.id;
+
+
+--
+-- Name: collect_trademe; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.collect_trademe (
+    solving_start_time timestamp with time zone DEFAULT now(),
+    solving_end_time timestamp with time zone,
+    stop_before_page smallint,
+    failed_pages smallint[],
     id integer NOT NULL,
     complete_after_page smallint
 );
 
 
 --
--- Name: TABLE crawler_collect_trademe; Type: COMMENT; Schema: public; Owner: -
+-- Name: TABLE collect_trademe; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.crawler_collect_trademe IS 'Web crawler jobs to retrieve Trademe properties.';
-
-
---
--- Name: COLUMN crawler_collect_trademe.solving_start_time; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.crawler_collect_trademe.solving_start_time IS 'Start time of web crawler job.';
+COMMENT ON TABLE public.collect_trademe IS 'Web crawler jobs to retrieve Trademe properties.';
 
 
 --
--- Name: COLUMN crawler_collect_trademe.solving_end_time; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN collect_trademe.solving_start_time; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.crawler_collect_trademe.solving_end_time IS 'End time of web crawler job. If this field is not null, the web crawler is successfully executed.';
-
-
---
--- Name: COLUMN crawler_collect_trademe.stop_before_page; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.crawler_collect_trademe.stop_before_page IS 'Web crawler stopped (without completed) before retrieving this page.';
+COMMENT ON COLUMN public.collect_trademe.solving_start_time IS 'Start time of web crawler job.';
 
 
 --
--- Name: COLUMN crawler_collect_trademe.failed_pages; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN collect_trademe.solving_end_time; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.crawler_collect_trademe.failed_pages IS 'List of page numbers that failed to be retrieved.';
+COMMENT ON COLUMN public.collect_trademe.solving_end_time IS 'End time of web crawler job. If this field is not null, the web crawler is successfully executed.';
 
 
 --
--- Name: COLUMN crawler_collect_trademe.complete_after_page; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN collect_trademe.stop_before_page; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.crawler_collect_trademe.complete_after_page IS 'Web crawler is successfully executed after retrieving this page.';
+COMMENT ON COLUMN public.collect_trademe.stop_before_page IS 'Web crawler stopped (without completed) before retrieving this page.';
+
+
+--
+-- Name: COLUMN collect_trademe.failed_pages; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.collect_trademe.failed_pages IS 'List of page numbers that failed to be retrieved.';
+
+
+--
+-- Name: COLUMN collect_trademe.complete_after_page; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.collect_trademe.complete_after_page IS 'Web crawler is successfully executed after retrieving this page.';
 
 
 --
@@ -640,6 +686,26 @@ CREATE TABLE public.population (
 
 
 --
+-- Name: properties_auction_interest; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.properties_auction_interest (
+    bedroom smallint,
+    bathroom smallint,
+    parking smallint,
+    address character varying(128) NOT NULL,
+    sold boolean,
+    price integer,
+    status character varying(16),
+    qv_estimation integer,
+    agents character varying(32)[],
+    auction_date date NOT NULL,
+    agency character varying(32),
+    task_id integer
+);
+
+
+--
 -- Name: properties_homes; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -908,14 +974,21 @@ CREATE SEQUENCE public.trademe_crawler_id_seq
 -- Name: trademe_crawler_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.trademe_crawler_id_seq OWNED BY public.crawler_collect_trademe.id;
+ALTER SEQUENCE public.trademe_crawler_id_seq OWNED BY public.collect_trademe.id;
 
 
 --
--- Name: crawler_collect_trademe id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: collect_auction_interest id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.crawler_collect_trademe ALTER COLUMN id SET DEFAULT nextval('public.trademe_crawler_id_seq'::regclass);
+ALTER TABLE ONLY public.collect_auction_interest ALTER COLUMN id SET DEFAULT nextval('public.collect_auction_interest_id_seq'::regclass);
+
+
+--
+-- Name: collect_trademe id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.collect_trademe ALTER COLUMN id SET DEFAULT nextval('public.trademe_crawler_id_seq'::regclass);
 
 
 --
@@ -1023,6 +1096,14 @@ ALTER TABLE ONLY neon_auth.verification
 
 
 --
+-- Name: age_structure age_structure_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.age_structure
+    ADD CONSTRAINT age_structure_pk PRIMARY KEY (suburb_id, year, age_group);
+
+
+--
 -- Name: broadband_availability broadband_availability_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1060,6 +1141,14 @@ ALTER TABLE ONLY public.broadband_coverage_tree_hyperfiber
 
 ALTER TABLE ONLY public.broadband_coverage_tree
     ADD CONSTRAINT broadband_coverage_tree_pk PRIMARY KEY (z, x, y);
+
+
+--
+-- Name: collect_auction_interest collect_auction_interest_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.collect_auction_interest
+    ADD CONSTRAINT collect_auction_interest_pk PRIMARY KEY (id);
 
 
 --
@@ -1175,6 +1264,14 @@ ALTER TABLE ONLY public.population
 
 
 --
+-- Name: properties_auction_interest properties_auction_interest_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_auction_interest
+    ADD CONSTRAINT properties_auction_interest_pk PRIMARY KEY (auction_date, address);
+
+
+--
 -- Name: properties_homes_broadband_availability_link properties_homes_broadband_availability_link_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1263,10 +1360,10 @@ ALTER TABLE ONLY public.suburbs
 
 
 --
--- Name: crawler_collect_trademe trademe_crawler_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: collect_trademe trademe_crawler_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.crawler_collect_trademe
+ALTER TABLE ONLY public.collect_trademe
     ADD CONSTRAINT trademe_crawler_pkey PRIMARY KEY (id);
 
 
@@ -1375,8 +1472,24 @@ ALTER TABLE ONLY neon_auth.session
 
 
 --
+-- Name: properties_auction_interest properties_auction_interest_collect_auction_interest_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_auction_interest
+    ADD CONSTRAINT properties_auction_interest_collect_auction_interest_id_fk FOREIGN KEY (task_id) REFERENCES public.collect_auction_interest(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: properties_trademe properties_trademe_collect_trademe_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.properties_trademe
+    ADD CONSTRAINT properties_trademe_collect_trademe_id_fk FOREIGN KEY (task_id) REFERENCES public.collect_trademe(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict rdWXjzfG2XYtTQFMk0KUpUhvHwS3l7xtVEBhCpDkqzpfxh1C9qdH2osKyldlgFn
+\unrestrict R9I0avsojd2rc3vXndl1nI9PxEdUN2EpEuam1qLnBA3AUt8chZoqxSxSbgO3hux
 
