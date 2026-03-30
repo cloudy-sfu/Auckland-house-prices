@@ -45,7 +45,9 @@ i = 0
 max_failed_pages = 5
 failed_pages = 0
 is_github_actions = os.getenv("GITHUB_ACTIONS") == "true"
-while n == page_size:
+# Auction doesn't have exact time, so cannot use solving_start_time to stop.
+not_reached_last_auction_date = True
+while not_reached_last_auction_date and n == page_size:
     if i % int(500 / page_size) == 0:
         listings_df = pd.DataFrame(listings)
         listings_df = listings_df.convert_dtypes()
@@ -177,6 +179,7 @@ while n == page_size:
         if date_ <= last_auction_date:
             logging.info(f"Reached last completely recorded auction date "
                          f"{last_auction_date}, stop.")
+            not_reached_last_auction_date = False
             break
 
         listings.append({
