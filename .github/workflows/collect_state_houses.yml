@@ -2,7 +2,7 @@ name: Collect state houses - Kainga Ora & Land Information NZ
 
 on:
   schedule:
-    - cron: '0 8 20 * *'  # 20th every month 8:00 UTC
+    - cron: '0 0 1 * *'  # Every month
   workflow_dispatch:
 
 jobs:

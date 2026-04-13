@@ -184,7 +184,7 @@ schools = schools[[
 ]]
 
 # %% Export.
-engine = create_engine(os.environ["NEON_DB"])
+engine = create_engine(os.environ["NEON_DB"], pool_recycle=300)
 batch_size = 2000
 with engine.begin() as c:
     for i in range(0, schools.shape[0], batch_size):

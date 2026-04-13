@@ -77,10 +77,7 @@ for _, suburb in suburbs.iterrows():
             property_details = {}
         address = property_details.get('address')
         if not property_id:
-            url = card.get('url')
-            logging.warning("Cannot find property ID of:\n"
-                            f"Address = {address}\n"
-                            f"URL = https://homes.co.nz/address{url}")
+            # Cannot find property ID.
             continue
         # A: "Aluminium, including aluminium-coated timber",
         # B: "Brick, including clay and concrete bricks",
