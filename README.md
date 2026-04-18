@@ -17,30 +17,7 @@ Setup the database schema by `database_schema.sql`.
 >
 >   Any other PostgreSQL database release may work, but is not tested. If using other database, replace the [connection string](https://neon.com/docs/connect/connect-from-any-app) to Neon database by the [connection string](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) to your own PostgreSQL database.
 
-### Python environments
 
-This program requires multiple Python virtual environments. There are two options:
-
--   You can synchronize this scripts in different computers, where each of them uses one environment; OR
--   You can use one computer which satisfies the "computer description" of multiple environments (in the table above), and install those environments in the same computer.
-
-| Environment name                 | Python version | Requirements file path  | Computer description                                         |
-| -------------------------------- | -------------- | ----------------------- | ------------------------------------------------------------ |
-| Data collection - GitHub Actions | 3.12           | `requirements.txt`      | GitHub Actions runners.                                      |
-| Data collection - Self-hosted    | 3.13           | `requirements.txt`      | Any Linux operation system.<br>Open 24-hours every day.<br>Connect to Internet with New Zealand residential IP. |
-| Dashboard                        | 3.13           | `requirements-dash.txt` |                                                              |
-
-For each Python environment, let the corresponding requirements file path in the table above be `$req_path`.
-
-Create a Python virtual environment, where the version is mentioned in the table above.
-
-Run the following command in terminal.
-
-```
-pip install -r $req_path
-```
-
-## Scheduled jobs
 
 ### GitHub Actions
 
@@ -58,23 +35,24 @@ Add the following variables into GitHub repository settings "Secrets and variabl
 
 
 
-### Self-hosted
+### Self-hosted scheduled jobs
 
-These jobs must be self-hosted in New Zealand residential IP address, otherwise jobs will be blocked by their target websites.
+The computer which hosts scheduled jobs should satisfy the following requirements.
 
-Create and activate "Data collection - Self-hosted" Python virtual environment.
+-   Based on any Linux X64 operation system.
+-   Never turn off when scheduled jobs are active.
+-   Connect to the Internet by a New Zealand residential IP.
+-   Installed Chromium or Google Chrome.
+-   The system time zone should be Pacific/Auckland. (Run `date` in terminal to confirm; the job still works if using different time zone, but data collection time will be sifted from described.)
 
-Let `$BASE_DIR` and the current directory be the root directory of this program.
+Create and activate a Python virtual environment. Run the following command in terminal.
 
->   [!note]
->
->   The system time zone should be NZST or NZDT. Otherwise, the job starting time will be different from described. Run the following command in terminal to confirm.
->
->   ```
->   date
->   ```
+```
+sudo apt install xvfb
+pip install -r requirements.txt
+```
 
-Add the following variables into environment variables (lifecycle is the current session).
+Add the following variables into environment variables.
 
 | Variable     | Description                                                  |
 | ------------ | ------------------------------------------------------------ |
@@ -87,6 +65,7 @@ Run the following commands in terminal to install the self-hosted jobs.
 ```bash
 chmod -R 755 scheduled_jobs/
 ./scheduled_jobs/install_collect_trademe.sh
+./scheduled_jobs/install_collect_schools.sh
 ```
 
 >   [!important]
@@ -95,11 +74,13 @@ chmod -R 755 scheduled_jobs/
 
 
 
-## Usage
+### Dashboards
 
-### Descriptive visualization
+Create and activate a Python virtual environment. Run the following command in terminal.
 
-Activate Python environment "Dashboard".
+```
+pip install -r requirements-dash.txt
+```
 
 Add the following variables into environment variables.
 
@@ -107,7 +88,13 @@ Add the following variables into environment variables.
 | -------- | ----------------------------------- |
 | NEON_DB  | Connection string to Neon database. |
 
-Run the following command in terminal.
+
+
+## Usage
+
+### Descriptive visualization
+
+Activate "Dashboards" Python virtual environment. Run the following command in terminal.
 
 ```
 python dashboard/app.py

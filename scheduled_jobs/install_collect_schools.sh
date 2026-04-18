@@ -14,7 +14,8 @@ export NEON_DB="$NEON_DB"
 export TG_BOT_TOKEN="$TG_BOT_TOKEN"
 export TG_CHAT_ID="$TG_CHAT_ID"
 export PYTHONPATH=\$PYTHONPATH:$BASE_DIR
-python schools/get_school_meta.py
+/usr/bin/xvfb-run -a python schools/get_school_meta.py
+/usr/bin/xvfb-run -a python schools/get_school_zone.py
 EOF
 chmod +x "$JOB_SCRIPT_PATH"
 

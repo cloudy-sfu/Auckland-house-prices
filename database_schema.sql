@@ -2,9 +2,9 @@
 -- PostgreSQL database dump
 --
 
-\restrict R9I0avsojd2rc3vXndl1nI9PxEdUN2EpEuam1qLnBA3AUt8chZoqxSxSbgO3hux
+\restrict gOPUz8ervy1TemtqetNdZ3OWE7UijeddO5WiGQa13m2BkeuFhytYDJEMvlYLeKL
 
--- Dumped from database version 17.8 (a284a84)
+-- Dumped from database version 17.8 (a48d9ca)
 -- Dumped by pg_dump version 17.7
 
 SET statement_timeout = 0;
@@ -912,6 +912,16 @@ COMMENT ON COLUMN public.schools.lang_pacific IS 'Some students are tanght in Pa
 
 
 --
+-- Name: schools_zones; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.schools_zones (
+    school_number smallint NOT NULL,
+    geometry jsonb
+);
+
+
+--
 -- Name: state_houses; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1328,6 +1338,14 @@ ALTER TABLE ONLY public.schools
 
 
 --
+-- Name: schools_zones schools_zones_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.schools_zones
+    ADD CONSTRAINT schools_zones_pk PRIMARY KEY (school_number);
+
+
+--
 -- Name: state_houses_new_dev state_houses_new_dev_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1491,5 +1509,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict R9I0avsojd2rc3vXndl1nI9PxEdUN2EpEuam1qLnBA3AUt8chZoqxSxSbgO3hux
+\unrestrict gOPUz8ervy1TemtqetNdZ3OWE7UijeddO5WiGQa13m2BkeuFhytYDJEMvlYLeKL
 
