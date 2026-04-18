@@ -86,7 +86,6 @@ Run the following commands in terminal to install the self-hosted jobs.
 
 ```bash
 chmod -R 755 scheduled_jobs/
-./scheduled_jobs/install_collect_schools.sh
 ./scheduled_jobs/install_collect_trademe.sh
 ```
 
@@ -111,19 +110,8 @@ Add the following variables into environment variables.
 Run the following command in terminal.
 
 ```
-python $dashboard_name
+python dashboard/app.py
 ```
 
-where `$dashboard_name` is the dashboard name.
-
 Find the URL in terminal output and open in the browser.
-
-Dashboard names:
-
-| Name                      | Dashboard name              |
-| ------------------------- | --------------------------- |
-| Fuel prices dashboard     | `fuel/dashboard.py`         |
-| Crime count dashboard     | `crime/dashboard.py`        |
-| Ethnicity ratio dashboard | `population/dashboard.py`   |
-| Age structure dashboard   | `population/dashboard_1.py` |
 
