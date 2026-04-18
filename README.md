@@ -27,7 +27,7 @@ This program requires multiple Python virtual environments. There are two option
 | Environment name                 | Python version | Requirements file path  | Computer description                                         |
 | -------------------------------- | -------------- | ----------------------- | ------------------------------------------------------------ |
 | Data collection - GitHub Actions | 3.12           | `requirements.txt`      | GitHub Actions runners.                                      |
-| Data collection - Self-hosted    | 3.13           | `requirements.txt`      | Any Linux operation system.<br>Open 24-hours every day.<br>Connect to Internet with New Zealand residential IP. |
+| Data collection - Self-hosted    | 3.13           | `requirements.txt`      | Any Linux OS; Never turn off; New Zealand IP; Google Chrome. |
 | Dashboard                        | 3.13           | `requirements-dash.txt` |                                                              |
 
 For each Python environment, let the corresponding requirements file path in the table above be `$req_path`.
