@@ -11,12 +11,16 @@ from sqlalchemy import create_engine
 
 from cloudflare_bypass import CloudflareBypass
 from postgresql_upsert import upsert_dataframe
+from telegram_logger import TelegramHandler
 
 # %% Setup logger.
 logging.basicConfig(
     level=logging.INFO,
     format="[%(levelname)s] %(pathname)s %(message)s",
-    stream=sys.stdout,
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        TelegramHandler(os.environ.get("TG_BOT_TOKEN"), os.environ.get("TG_CHAT_ID"))
+    ],
 )
 
 # %% Load schools.
@@ -59,7 +63,7 @@ class BatchList:
         logging.info(f"Upserted {df.shape[0]} records to {self.table_name}.")
 
 
-zones = BatchList("schools_zones", ["school_number"])
+zones = BatchList("schools_zones", ["school_number", "poly_id"])
 for school_id in school_ids:
     header_ins = header.copy()
     header_ins['referer'] = f"{referer_base_url}?school={school_id}"
@@ -69,12 +73,16 @@ for school_id in school_ids:
         cf_bypass = CloudflareBypass(chrome)
         cf_bypass.bypass()
         school_zones = chrome.json.get('schoolZones', [])
-        if len(school_zones) > 1:
-            logging.warning(f"When ID = {school_id}, school zones length >= 2, keep the "
-                            f"first zone only.")
         for zone in school_zones:
+            try:
+                poly_id = zone['properties']['PolyID']
+                assert poly_id
+            except (KeyError, AttributeError, AssertionError):
+                logging.warning(f"School zone of school ID {school_id} misses \"PolyID\".")
+                continue
             zones.append({
                 "school_number": school_id,
+                "poly_id": poly_id,
                 "geometry": zone.get("geometry", {})
             })
     except Exception as e:

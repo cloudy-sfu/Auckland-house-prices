@@ -35,7 +35,7 @@ class TelegramHandler(logging.Handler):
             response = requests.post(self._url, data=payload, timeout=10)
             response.raise_for_status()
 
-        except (requests.ConnectionError, requests.Timeout):
+        except (requests.ConnectionError, requests.Timeout, requests.HTTPError):
             return
 
         except Exception:

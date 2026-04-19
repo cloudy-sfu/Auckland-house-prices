@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict gOPUz8ervy1TemtqetNdZ3OWE7UijeddO5WiGQa13m2BkeuFhytYDJEMvlYLeKL
+\restrict fpEvjA2aS15Kgs6nz12fpYgbGXiUTd9OzIfGcOiYK8vz47bZnfJ32cRRVyoBh61
 
 -- Dumped from database version 17.8 (a48d9ca)
 -- Dumped by pg_dump version 17.7
@@ -917,7 +917,8 @@ COMMENT ON COLUMN public.schools.lang_pacific IS 'Some students are tanght in Pa
 
 CREATE TABLE public.schools_zones (
     school_number smallint NOT NULL,
-    geometry jsonb
+    geometry jsonb,
+    poly_id integer NOT NULL
 );
 
 
@@ -1342,7 +1343,7 @@ ALTER TABLE ONLY public.schools
 --
 
 ALTER TABLE ONLY public.schools_zones
-    ADD CONSTRAINT schools_zones_pk PRIMARY KEY (school_number);
+    ADD CONSTRAINT schools_zones_pk PRIMARY KEY (school_number, poly_id);
 
 
 --
@@ -1509,5 +1510,5 @@ ALTER TABLE ONLY public.properties_trademe
 -- PostgreSQL database dump complete
 --
 
-\unrestrict gOPUz8ervy1TemtqetNdZ3OWE7UijeddO5WiGQa13m2BkeuFhytYDJEMvlYLeKL
+\unrestrict fpEvjA2aS15Kgs6nz12fpYgbGXiUTd9OzIfGcOiYK8vz47bZnfJ32cRRVyoBh61
 
