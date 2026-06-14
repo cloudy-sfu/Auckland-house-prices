@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from requests import Session
 from sqlalchemy import create_engine, text
 
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 from telegram_logger import TelegramHandler
 
 # %% Initialization.
@@ -99,7 +99,7 @@ for page in range(1, n_pages + 1):
         entities_df['task_id'] = task_id
         if entities_df['start_time'].min() <= last_checkout_time:
             entities_df = entities_df.loc[entities_df['start_time'] > last_checkout_time, :]
-            upsert_dataframe(
+            upsert(
                 engine,
                 entities_df,
                 ['listing_id'],
@@ -113,7 +113,7 @@ for page in range(1, n_pages + 1):
             logging.info("Reach last checkout time, successfully finished.")
             break
         else:
-            upsert_dataframe(
+            upsert(
                 engine,
                 entities_df,
                 ['listing_id'],

@@ -5,7 +5,7 @@ import sys
 from sqlalchemy import create_engine
 
 from macroeconomics.get_interest import *
-from postgresql_upsert import insert_if_not_exists
+from postgresql_ops import insert_skip_conflict
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,7 +28,7 @@ ocr_1['date'] = pd.to_datetime(ocr_1['date'])
 ocr_1 = ocr_1.convert_dtypes()
 
 engine = create_engine(os.environ['NEON_DB'])
-insert_if_not_exists(
+insert_skip_conflict(
     engine, ocr_1,
     ["date"],
     "macroeconomics_ocr"

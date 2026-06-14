@@ -7,7 +7,7 @@ import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine
 
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 
 # %% Initialization.
 logging.basicConfig(
@@ -106,7 +106,7 @@ records.rename(
 
 # %% Export.
 engine = create_engine(os.environ['NEON_DB'])
-upsert_dataframe(
+upsert(
     engine,
     records,
     ['parcel_id'],

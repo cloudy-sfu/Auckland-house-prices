@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from requests import Session
 from sqlalchemy import create_engine, text
 
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 
 # %% Initialization.
 logging.basicConfig(
@@ -54,7 +54,7 @@ while not_reached_last_auction_date and n == page_size:
         listings_df.drop_duplicates(subset=["auction_date", "address"], inplace=True)
         logging.info(f"Queued {listings_df.shape[0]} records of auctions, uploading to "
                      f"database.")
-        upsert_dataframe(
+        upsert(
             engine,
             listings_df,
             ["auction_date", "address"],
@@ -204,7 +204,7 @@ listings_df = listings_df.convert_dtypes()
 listings_df.drop_duplicates(subset=["auction_date", "address"], inplace=True)
 logging.info(f"Queued {listings_df.shape[0]} records of auctions, uploading to "
              f"database.")
-upsert_dataframe(
+upsert(
     engine,
     listings_df,
     ["auction_date", "address"],

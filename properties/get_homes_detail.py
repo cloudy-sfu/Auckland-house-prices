@@ -8,7 +8,7 @@ from pandas._libs.tslibs.np_datetime import OutOfBoundsDatetime
 from requests import Session
 from sqlalchemy import create_engine
 
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 
 # %% Initialization.
 logging.basicConfig(
@@ -42,7 +42,7 @@ for i, row in properties.iterrows():
         houses_df.drop_duplicates(subset=['property_id'], inplace=True)
         logging.info(f"Queued {houses_df.shape[0]} records of houses "
                      f"information, uploading to database.")
-        upsert_dataframe(
+        upsert(
             engine,
             houses_df,
             ["property_id"],
@@ -153,7 +153,7 @@ houses_df = houses_df.convert_dtypes()
 houses_df.drop_duplicates(subset=['property_id'], inplace=True)
 logging.info(f"Queued {houses_df.shape[0]} records of houses information, uploading to "
              f"database.")
-upsert_dataframe(
+upsert(
     engine,
     houses_df,
     ["property_id"],

@@ -16,7 +16,7 @@ from rasterio.transform import from_bounds
 from requests import Session
 from sqlalchemy import create_engine
 
-from postgresql_upsert import upsert_dataframe
+from batch_list import BatchList
 
 # %% Constants.
 parser = ArgumentParser()
@@ -30,31 +30,6 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S',
     stream=sys.stdout,
 )
-
-
-class BatchList:
-    def __init__(self, table_name, unique_key_columns):
-        self._items = []  # Internal list
-        self.table_name = table_name
-        self.unique_key_columns = unique_key_columns
-
-    def append(self, obj):
-        self._items.append(obj)
-        if len(self._items) >= 500:
-            self.flush()
-
-    def flush(self):
-        df = pd.DataFrame(self._items).convert_dtypes()
-        df.drop_duplicates(subset=self.unique_key_columns, keep='first', inplace=True)
-        upsert_dataframe(
-            engine,
-            df,
-            self.unique_key_columns,
-            self.table_name
-        )
-        self._items.clear()
-        logging.info(f"Upserted {df.shape[0]} records to {self.table_name}.")
-
 
 session = Session()
 with open("broadband/chorus_broadband_coverage.json") as f:

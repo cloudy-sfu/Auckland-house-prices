@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 from requests import Session
 from sqlalchemy import create_engine
 
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 
 # %% Initialization.
 logging.basicConfig(
@@ -149,14 +149,14 @@ age_all_suburbs.rename(
 # %% Export.
 batch_size = 500
 for i in range(0, ethnicity_all_suburbs.shape[0], batch_size):
-    upsert_dataframe(
+    upsert(
         engine,
         ethnicity_all_suburbs.iloc[i:i+batch_size, :],
         ['suburb_id', 'year', 'ethnicity'],
         "ethnicity",
     )
 for i in range(0, age_all_suburbs.shape[0], batch_size):
-    upsert_dataframe(
+    upsert(
         engine,
         age_all_suburbs.iloc[i:i+batch_size, :],
         ['suburb_id', 'year', 'age_group'],

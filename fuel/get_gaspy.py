@@ -10,7 +10,7 @@ import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine
 
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 
 # %% Initialize.
 logging.basicConfig(
@@ -140,7 +140,7 @@ prices = compound_data[['station_id', 'brand', 'fuel_type', 'price', 'update_tim
 
 db_writing_chunk_size = 2000
 for i in range(0, prices.shape[0], db_writing_chunk_size):
-    upsert_dataframe(
+    upsert(
         engine,
             prices.iloc[i:i + db_writing_chunk_size],
         ['station_id', 'fuel_type', 'update_time'],
@@ -154,7 +154,7 @@ compound_data.dropna(subset=['geo_hash'], inplace=True)
 station_locs = compound_data[['station_id', 'name', 'geo_hash', 'latitude', 'longitude']]
 
 for i in range(0, station_locs.shape[0], db_writing_chunk_size):
-    upsert_dataframe(
+    upsert(
         engine,
             station_locs.iloc[i:i + db_writing_chunk_size],
         ['station_id'],

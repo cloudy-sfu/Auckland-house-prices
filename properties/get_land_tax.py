@@ -7,7 +7,7 @@ import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine
 
-from postgresql_upsert import upsert_dataframe, insert_if_not_exists
+from postgresql_ops import upsert, insert_skip_conflict
 
 # %% Initialization.
 logging.basicConfig(
@@ -43,7 +43,7 @@ for i, row in houses.iterrows():
         records_df.drop_duplicates(subset=['assessment_id'], inplace=True)
         logging.info(f"Queued {records_df.shape[0]} records of land tax, uploading to "
                      f"database.")
-        upsert_dataframe(
+        upsert(
             engine,
             records_df,
             ["assessment_id"],
@@ -57,7 +57,7 @@ for i, row in houses.iterrows():
         logging.info(f"Queued {homes_land_link_df.shape[0]} records of "
                      f"homes.co.nz property ID and land tax assessment ID pairs, "
                      f"uploading to database.")
-        insert_if_not_exists(
+        insert_skip_conflict(
             engine,
             homes_land_link_df,
             ["property_id"],
@@ -169,7 +169,7 @@ records_df = records_df.convert_dtypes()
 records_df.drop_duplicates(subset=['assessment_id'], inplace=True)
 logging.info(f"Queued {records_df.shape[0]} records of land tax, uploading to "
              f"database.")
-upsert_dataframe(
+upsert(
     engine,
     records_df,
     ["assessment_id"],
@@ -183,7 +183,7 @@ homes_land_link_df.drop_duplicates(inplace=True)
 logging.info(f"Queued {homes_land_link_df.shape[0]} records of "
              f"homes.co.nz property ID and land tax assessment ID pairs, "
              f"uploading to database.")
-insert_if_not_exists(
+insert_skip_conflict(
     engine,
     homes_land_link_df,
     ["property_id"],

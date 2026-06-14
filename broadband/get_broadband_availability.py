@@ -12,7 +12,7 @@ from requests import Session
 from sqlalchemy import create_engine
 from thefuzz import fuzz
 
-from postgresql_upsert import upsert_dataframe
+from batch_list import BatchList
 
 # %% Initialization.
 logging.basicConfig(
@@ -69,38 +69,13 @@ with engine.connect() as c:
 logging.info(f"Total number of houses to check broadband availability: {houses.shape[0]}")
 
 # %% Main loop.
-records = []
-homes_chorus_link = []
+records = BatchList("broadband_availability", ["tlc"])
+homes_chorus_link = BatchList("properties_homes_broadband_availability_link", ["property_id"])
 valve_1 = valve_2 = valve_3 = True
 detail_continuous_failure_count = 0
 is_github_actions = os.getenv("GITHUB_ACTIONS") == "true"
 for i, row in houses.iterrows():
     address = row['address']
-
-    # %% Check conditions to quit loop.
-    if i % 500 == 0:
-        records_df = pd.DataFrame(records)
-        records_df.drop_duplicates(subset=['tlc'], inplace=True)
-        logging.info(f"Queued {records_df.shape[0]} records of broadband availability, "
-                     f"uploading to database.")
-        upsert_dataframe(
-            engine,
-            records_df,
-            ["tlc"],
-            "broadband_availability"
-        )
-        records.clear()
-        homes_chorus_link_df = pd.DataFrame(homes_chorus_link)
-        logging.info(
-            f"Queued {homes_chorus_link_df.shape[0]} records of homes.co.nz property ID "
-            f"and Chorus address ID pairs, uploading to database.")
-        upsert_dataframe(
-            engine,
-            homes_chorus_link_df,
-            ["property_id"],
-            "properties_homes_broadband_availability_link"
-        )
-        homes_chorus_link.clear()
 
     if not (valve_1 and valve_2 and valve_3):
         logging.warning("Chorus API reaches daily limit and won't reset shortly, stop.")
@@ -206,24 +181,5 @@ for i, row in houses.iterrows():
         "aid": aid,
     })
 
-records_df = pd.DataFrame(records)
-records_df.drop_duplicates(subset=['tlc'], inplace=True)
-logging.info(f"Queued {records_df.shape[0]} records of broadband availability, "
-             f"uploading to database.")
-upsert_dataframe(
-    engine,
-    records_df,
-    ["tlc"],
-    "broadband_availability"
-)
-records.clear()
-homes_chorus_link_df = pd.DataFrame(homes_chorus_link)
-logging.info(f"Queued {homes_chorus_link_df.shape[0]} records of homes.co.nz property ID "
-             f"and Chorus address ID pairs, uploading to database.")
-upsert_dataframe(
-    engine,
-    homes_chorus_link_df,
-    ["property_id"],
-    "properties_homes_broadband_availability_link"
-)
-homes_chorus_link.clear()
+records.flush()
+homes_chorus_link.flush()

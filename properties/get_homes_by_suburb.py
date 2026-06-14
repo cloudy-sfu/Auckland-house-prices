@@ -8,7 +8,7 @@ from requests import Session
 from sqlalchemy import create_engine
 
 import polyline
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 
 # %% Initialization.
 logging.basicConfig(
@@ -186,7 +186,7 @@ for _, suburb in suburbs.iterrows():
     # NaN still exists, and will raise "integer out of range", so convert to pd.NA.
     houses = houses.convert_dtypes()
     houses.drop_duplicates(subset=['property_id'], inplace=True)
-    upsert_dataframe(
+    upsert(
         engine,
         houses,
         ["property_id"],

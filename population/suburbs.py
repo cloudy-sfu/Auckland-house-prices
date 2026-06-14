@@ -4,7 +4,7 @@ import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine
 
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 
 session = Session()
 
@@ -30,4 +30,4 @@ suburbs = [
 suburbs = pd.DataFrame(suburbs)
 
 engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
-upsert_dataframe(engine, suburbs, ["suburb_id"], "suburbs")
+upsert(engine, suburbs, ["suburb_id"], "suburbs")

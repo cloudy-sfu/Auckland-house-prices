@@ -9,8 +9,8 @@ import pandas as pd
 from DrissionPage import ChromiumPage
 from sqlalchemy import create_engine
 
+from batch_list import BatchList
 from cloudflare_bypass import CloudflareBypass
-from postgresql_upsert import upsert_dataframe
 from telegram_logger import TelegramHandler
 
 # %% Setup logger.
@@ -37,31 +37,6 @@ referer_base_url = "https://www.educationcounts.govt.nz/find-school/school/profi
 with open("schools/header_school_zone.json") as f:
     header = json.load(f)
 chrome = ChromiumPage()
-
-
-class BatchList:
-    def __init__(self, table_name, unique_key_columns):
-        self._items = []  # Internal list
-        self.table_name = table_name
-        self.unique_key_columns = unique_key_columns
-
-    def append(self, obj):
-        self._items.append(obj)
-        if len(self._items) >= 500:
-            self.flush()
-
-    def flush(self):
-        df = pd.DataFrame(self._items).convert_dtypes()
-        df.drop_duplicates(subset=self.unique_key_columns, keep='first', inplace=True)
-        upsert_dataframe(
-            engine,
-            df,
-            self.unique_key_columns,
-            self.table_name
-        )
-        self._items.clear()
-        logging.info(f"Upserted {df.shape[0]} records to {self.table_name}.")
-
 
 zones = BatchList("schools_zones", ["school_number", "poly_id"])
 for school_id in school_ids:

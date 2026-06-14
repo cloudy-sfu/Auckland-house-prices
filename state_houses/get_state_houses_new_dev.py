@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from requests import Session
 from sqlalchemy import create_engine
 
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 
 # %% Setup logger.
 logging.basicConfig(
@@ -198,7 +198,7 @@ state_houses = state_houses.convert_dtypes()
 # %%
 engine = create_engine(os.environ['NEON_DB'])
 try:
-    upsert_dataframe(
+    upsert(
         engine,
         state_houses,
         ['info_marker_id'],

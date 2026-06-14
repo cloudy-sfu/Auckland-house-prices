@@ -8,7 +8,7 @@ from DrissionPage import ChromiumPage
 from sqlalchemy import create_engine
 
 from cloudflare_bypass import CloudflareBypass
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 from telegram_logger import TelegramHandler
 
 # %% Setup logger.
@@ -203,7 +203,7 @@ engine = create_engine(os.environ["NEON_DB"], pool_recycle=300)
 batch_size = 2000
 with engine.begin() as c:
     for i in range(0, schools.shape[0], batch_size):
-        upsert_dataframe(
+        upsert(
             engine, schools.iloc[i:i+batch_size, :],
             ["school_number"],
             "schools"

@@ -88,4 +88,4 @@ def find_available_port(start_port: int, tries: int = 100):
 
 if __name__ == '__main__':
     port = find_available_port(1024)
-    app.run(debug=True, host='localhost', port=port)
+    app.run(debug=True, host='127.0.0.1', port=port)

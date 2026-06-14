@@ -6,7 +6,7 @@ import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine
 
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 
 logging.basicConfig(
     level=logging.INFO,
@@ -48,7 +48,7 @@ for year in all_years:
     population = population.convert_dtypes()
     population.rename(columns={"small_area_code": "suburb_id"}, inplace=True)
 
-    upsert_dataframe(
+    upsert(
         engine, population,
         ['suburb_id', 'year'],
         "population"

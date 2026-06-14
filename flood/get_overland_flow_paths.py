@@ -10,7 +10,7 @@ import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine
 
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 
 # %% Initialization.
 logging.basicConfig(
@@ -139,7 +139,7 @@ for page in range(n_pages):
     records.drop_duplicates(subset=['global_id'], inplace=True)
 
     # %% Export.
-    upsert_dataframe(
+    upsert(
         engine, records,
         ["global_id"],
         "flood_overland_flow_paths",

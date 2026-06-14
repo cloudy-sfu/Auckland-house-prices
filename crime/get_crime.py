@@ -6,7 +6,7 @@ import pandas as pd
 from requests import Session
 from sqlalchemy import create_engine, text
 
-from postgresql_upsert import upsert_dataframe
+from postgresql_ops import upsert
 
 # %% Initialization.
 logging.basicConfig(
@@ -128,7 +128,7 @@ for _, row in start_year_month.iterrows():
 
 if records_all:
     records_all = pd.concat(records_all, axis=0)
-    upsert_dataframe(
+    upsert(
         engine, records_all,
         ['suburb_id', 'year', 'month'],
         'crimes'
