@@ -50,8 +50,8 @@ response = session.post(
         "email": os.environ["GASPY_EMAIL"],
         "password": os.environ["GASPY_PASSWORD"],
         "gold_key": None,
-        "v": 22,
-        "a": "3.21.3",
+        "v": "26",
+        "a": "3.30.12",
     }),
     headers=dart_header,
 )
@@ -89,17 +89,18 @@ for fuel_type in selected_fuel_types:
     for chunk in stations_chunks:
         geo_hash_list = chunk['geo_hash'].unique().tolist()
         response = session.post(
-            url="https://gaspy.nz/api/v1/Map/blocksFromHashcodes",
+            url="https://gaspy.nz/api/v1/Map/blocksFromHashcodesV2",
             data=json.dumps({
                 "hashcodes": geo_hash_list,
                 "fuel_type_id": fuel_type_id,
                 "fuel_type_code": fuel_type,
                 "gold_key": None,
                 "ev_plug_types": [],
-                "v": "22",
-                "a": "3.21.3",
+                "v": "26",
+                "a": "3.30.12",
                 "udid": "ios_" + device_id,
-            })
+            }),
+            headers=dart_header,
         )
         time.sleep(random.uniform(0.7, 1.3))
         if response.status_code != 200:
