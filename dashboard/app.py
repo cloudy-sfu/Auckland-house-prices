@@ -23,12 +23,16 @@ app.index_string = '''
         <title>{%title%}</title>
         {%favicon%}
         {%css%}
+        <!-- Ref: https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing -->
         <style>
+            *, *::before, *::after {
+                box-sizing: border-box;
+            }
             body, html {
                 margin: 0;
                 padding: 0;
                 width: 100%;
-                height: 100%;
+                min-height: 100%;
                 font-family: Arial, sans-serif;
             }
         </style>
@@ -47,7 +51,7 @@ app.index_string = '''
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     html.Div(id='page-content',
-             style={'width': '100vw', 'height': '100vh', 'position': 'relative'})
+             style={'width': '100%', 'minHeight': '100vh', 'position': 'relative'})
 ])
 
 

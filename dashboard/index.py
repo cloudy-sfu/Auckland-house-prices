@@ -45,6 +45,7 @@ def layout_home():
             'justifyContent': 'center',
         })
     ], style={
+        'boxSizing': 'border-box',
         'padding': '60px 20px',
         'fontFamily': 'Arial, sans-serif',
         'minHeight': '100vh',
