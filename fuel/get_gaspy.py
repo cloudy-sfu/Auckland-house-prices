@@ -81,6 +81,7 @@ def decrypt(text_encrypted, csrf_token_):
     return aes_decrypted_unpadded_dict
 
 
+failed_cities = []
 for city_name, (latitude, longitude, radius) in cities.items():
     try:
         response = session.post(
@@ -154,4 +155,10 @@ for city_name, (latitude, longitude, radius) in cities.items():
 
     except Exception as e:
         logging.warning(f"Fail to parse city \"{city_name}\". {type(e).__name__}: {e}")
+        e.add_note(f"Happen when parsing city \"{city_name}\".")
+        failed_cities.append(e)
         continue
+
+
+if failed_cities:
+    raise ExceptionGroup("Fail to parse some cities.", failed_cities)
