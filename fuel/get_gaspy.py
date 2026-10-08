@@ -1,3 +1,5 @@
+import base64
+import gzip
 import json
 import logging
 import os
@@ -7,6 +9,8 @@ import time
 import uuid
 
 import pandas as pd
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
 from requests import Session
 from sqlalchemy import create_engine
 
@@ -21,26 +25,10 @@ logging.basicConfig(
 )
 with open("fuel/dart_header.json") as f:
     dart_header = json.load(f)
-stations_chunk_size = 39
 neon_db = os.environ["NEON_DB"]
-
-# %% Pre-process stations.
-engine = create_engine(neon_db)
-with engine.connect() as c:
-    stations = pd.read_sql("select * from fuel_stations", c)
-stations.set_index("station_id", inplace=True)
-initial_stations = pd.read_csv("fuel/fuel_stations.csv")
-initial_stations.rename(columns={"id": "station_id"}, inplace=True)
-del initial_stations["city"]
-initial_stations.set_index("station_id", inplace=True)
-stations = stations.combine_first(initial_stations).reset_index()
-stations.sort_values(by='geo_hash', inplace=True)
-stations.dropna(subset=["geo_hash"], inplace=True)
-stations['geo_hash_len'] = stations['geo_hash'].str.len()
-stations_chunks = []
-for length, subset in stations.groupby('geo_hash_len'):
-    for i in range(0, subset.shape[0], stations_chunk_size):
-        stations_chunks.append(subset.iloc[i:i+stations_chunk_size])
+engine = create_engine(neon_db, pool_recycle=300)
+device_id = str(uuid.uuid4()).upper()
+chunk_size = 2000
 
 # %% Login.
 session = Session()
@@ -69,96 +57,101 @@ selected_fuel_types = ['91', 'D', '95', '98']
 assert all(fuel_type in fuel_types.keys() for fuel_type in selected_fuel_types), \
     "Some of petrol #91, #95, #98 or diesel don't have a fuel type ID."
 
-# %% Query map data.
-now = pd.Timestamp('now', tz='UTC')
-start_time = now - pd.Timedelta(days=1)
-device_id = str(uuid.uuid4()).upper()
-compound_data = []
+# %% Define cities.
+# Tool: https://www.calcmaps.com/map-radius/
+cities = {
+    # latitude, longitude, radius (km)
+    "Auckland": [-36.93850, 174.80141, 40],
+    "Hamilton": [-37.79170, 175.30655, 25],
+    "Wellington": [-41.17934, 174.92432, 25],
+    "Christchurch": [-43.51038, 172.54940, 20],
+}
 
 
-def safe_astype(ins, cls):
+# %% Search fuel prices.
+def decrypt(text_encrypted, csrf_token_):
+    aes_key = ("e875c333" + csrf_token_[4:20] + "8f97b3e6").encode("utf-8")
+    iv_b64, ct_b64 = text_encrypted.split(":", 1)
+    aes_cipher = AES.new(aes_key, AES.MODE_CBC, base64.b64decode(iv_b64))
+    aes_decrypted = aes_cipher.decrypt(base64.b64decode(ct_b64))
+    aes_decrypted_unpadded = unpad(aes_decrypted, 16)
+    if aes_decrypted_unpadded.startswith(b"\x1f\x8b"):
+        aes_decrypted_unpadded = gzip.decompress(aes_decrypted_unpadded)
+    aes_decrypted_unpadded_dict = json.loads(aes_decrypted_unpadded)
+    return aes_decrypted_unpadded_dict
+
+
+for city_name, (latitude, longitude, radius) in cities.items():
     try:
-        return cls(ins)
-    except (ValueError, TypeError):
-        return pd.NA
-
-
-for fuel_type in selected_fuel_types:
-    fuel_type_id = fuel_types[fuel_type]
-    price_per_type = []
-    for chunk in stations_chunks:
-        geo_hash_list = chunk['geo_hash'].unique().tolist()
         response = session.post(
-            url="https://gaspy.nz/api/v1/Map/blocksFromHashcodesV2",
-            data=json.dumps({
-                "hashcodes": geo_hash_list,
-                "fuel_type_id": fuel_type_id,
-                "fuel_type_code": fuel_type,
-                "gold_key": None,
+            url="https://gaspy.nz/api/v1/FuelPrice/searchFuelPricesV2",
+            data={
+                "longitude": longitude,
+                "latitude": latitude,
+                "distance": radius,
+                "order_by": "price",
+                "fuel_type_id": 1,
                 "ev_plug_types": [],
+                "device_type": "I",
+                "is_mock_location": False,
+                "is_jail_broken": False,
+                "is_not_real_device": False,
                 "v": "26",
                 "a": "3.30.12",
                 "udid": "ios_" + device_id,
-            }),
-            headers=dart_header,
+            }
         )
+        response.raise_for_status()
         time.sleep(random.uniform(0.7, 1.3))
-        if response.status_code != 200:
-            logging.warning(f"Geometry hash region fails: {geo_hash_list} "
-                            f"Status code: {response.status_code}. Reason: {response.reason}")
-            continue
-        response_json = response.json()
-        if not response_json.get('success'):
-            logging.warning(f"Geometry hash region fails: {geo_hash_list} "
-                            f"gaspy.nz returns errors: {response_json.get('error')}")
-            continue
-        data = response_json.get('data')
-        if not isinstance(data, list):
-            logging.warning(f"Fail to parse the response of geometry hash region "
-                            f"{geo_hash_list}")
-        for station in data:
-            updated_time_str = station.get('dateUpdated', '')
-            updated_time_naive = pd.to_datetime(
-                updated_time_str, format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
-            updated_time = updated_time_naive.tz_localize(tz='UTC', nonexistent='NaT')
-            if updated_time >= start_time:
-                compound_data.append({
-                    "station_id": station.get('stationKey', pd.NA),
-                    "brand": brands.get(station.get('brandId'), pd.NA),
-                    "fuel_type": fuel_type,
-                    "price": safe_astype(station.get('price'), float),
-                    "update_time": updated_time,
-                    "latitude": safe_astype(station.get('lat'), float),
-                    "longitude": safe_astype(station.get('lng'), float),
-                    "geo_hash": station.get('geoHash', pd.NA),
-                    "name": station.get('stationName', pd.NA),
-                })
+        response_json = decrypt(response.text, session.cookies.get("XSRF-TOKEN"))
+        prices = response_json.get('data')
 
-compound_data = pd.DataFrame(compound_data)
-compound_data.drop_duplicates(subset=['station_id', 'fuel_type'], inplace=True)
-compound_data["name"] = compound_data["name"].str[:128]
-prices = compound_data[['station_id', 'brand', 'fuel_type', 'price', 'update_time']]
+        prices = pd.DataFrame(prices)
+        prices['date_updated'] = pd.to_datetime(
+            prices['date_updated'], format="%Y-%m-%d %H:%M:%S", errors='coerce', utc=True)
+        prices.sort_values(inplace=True, by=["date_updated"], ascending=False)
+        prices.drop_duplicates(inplace=True, subset=["station_key", "fuel_type_name"])
+        prices['datetime_added'] = pd.to_datetime(
+            prices['datetime_added'], format="%Y-%m-%d %H:%M:%S", errors='coerce',
+            utc=True)
 
-db_writing_chunk_size = 2000
-for i in range(0, prices.shape[0], db_writing_chunk_size):
-    upsert(
-        engine,
-            prices.iloc[i:i + db_writing_chunk_size],
-        ['station_id', 'fuel_type', 'update_time'],
-        'fuel_prices',
-    )
-logging.info(f"Successfully upsert {prices.shape[0]} rows to the database.")
+        stations = prices.copy()
+        stations.drop_duplicates(inplace=True, subset=["station_key"])
+        logging.info(f"Collected {stations.shape[0]} in city \"{city_name}\".")
+        stations = stations[['station_key', 'station_name', 'station_street',
+                             'station_suburb', 'station_city', 'station_region',
+                             'station_postcode', 'station_lat', 'station_lng',
+                             'datetime_added']]
+        stations.rename(columns=lambda col: col.removeprefix("station_"),
+                        inplace=True)
+        stations.rename(columns={
+            "key": "station_id",
+            "lat": "latitude",
+            "lng": "longitude",
+            "datetime_added": "created_time",
+        }, inplace=True)
+        for i in range(0, stations.shape[0], chunk_size):
+            upsert(
+                engine, stations.iloc[i:i+chunk_size],
+                ["station_id"], "fuel_stations",
+            )
 
-# %% Insert stations.
-compound_data.drop_duplicates(subset=['station_id'], inplace=True)
-compound_data.dropna(subset=['geo_hash'], inplace=True)
-station_locs = compound_data[['station_id', 'name', 'geo_hash', 'latitude', 'longitude']]
+        prices = prices[['station_key', 'fuel_type_name', 'brand_name', 'current_price',
+                         'date_updated']]
+        prices.rename(columns={
+            "station_key": "station_id",
+            "fuel_type_name": "fuel_type",
+            "brand_name": "brand",
+            "current_price": "price",
+            "date_updated": "update_time"
+        }, inplace=True)
+        for i in range(0, prices.shape[0], chunk_size):
+            upsert(
+                engine, prices.iloc[i:i+chunk_size],
+                ["station_id", "fuel_type", "update_time"],
+                "fuel_prices"
+            )
 
-for i in range(0, station_locs.shape[0], db_writing_chunk_size):
-    upsert(
-        engine,
-            station_locs.iloc[i:i + db_writing_chunk_size],
-        ['station_id'],
-        'fuel_stations'
-    )
-logging.info(f"Successfully upsert {station_locs.shape[0]} rows to the database.")
+    except Exception as e:
+        logging.warning(f"Fail to parse city \"{city_name}\". {type(e).__name__}: {e}")
+        continue
